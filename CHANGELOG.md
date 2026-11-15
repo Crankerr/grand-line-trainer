@@ -1,7 +1,8 @@
-# v1.9 Elbaph batch
+# v1.9.1 — Scrollable hand
 
-Automated: Saul and Loki +12 cost; 12+ cost checks; Jinbe +3000 and Blocker; conditional +3000 for Zoro, Sanji, Robin, Franky, Usopp; Luffy conditional Rush; Loki opponent-turn +3000; Sanji draw-2/trash-2; Nami optional Elbaph discard/draw-2; Usopp top-three search; Chopper Unblockable flag; Robin -3000; Franky KO <=2; Luffy draw 1.
+- Show every card in hand (previously only first five rendered).
+- Horizontal swipe on mobile/tablet and horizontal scroll on desktop.
+- Keep selected-card actions and scroll position when re-rendering.
+- No saved-match format changes.
 
-Partially/manual: Zoro effect-removal protection; Gerd Trash recovery and Leader-dependent +12 (only if leaderElbaph set; Brook is not Elbaph); Luffy Trash revival; Loki multi-target KO. Unblockable is tracked but opponent Blocker simulation is limited.
-
-Existing simulator limitations: opponent AI absent; Trash records names, not card identities; simplified DON!! and Life; hand displays first 5 cards; effects in this build are a training approximation, not a complete official rules engine.
+Includes all v1.9 Elbaph batch features.
