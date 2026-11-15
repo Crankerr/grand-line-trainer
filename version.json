@@ -1,5 +1,5 @@
 {
-  "version": "1.8.0",
+  "version": "1.9.0",
   "download_url": "https://crankerr.github.io/grand-line-trainer/index.html",
-  "notes": "Saul OP17-089 continuous +12 cost and On Play top-three Elbaph search; I am Luffy Counter now checks current Character cost."
+  "notes": "Elbaph batch: dynamic cost/power/blocker/Rush; multiple On Play abilities; partial manual effects."
 }

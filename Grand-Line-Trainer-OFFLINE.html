@@ -41,12 +41,12 @@ button{padding:5px 7px;font-size:11px}
 .setup-card button.gold{background:#b77e25;color:#fff;font-weight:bold}
 .setup-card .note{font-size:11px;color:#b9cce2;margin-top:8px;line-height:1.5}
 </style></head><body><div class="wrap">
-<h1>☠ GRAND LINE TRAINER <span style="font-size:12px;color:#9daec5">v1.7 I'm Luffy!!</span></h1><div class="sub">One Piece TCG · Offline mobile battlefield prototype · No official card artwork</div>
+<h1>☠ GRAND LINE TRAINER <span style="font-size:12px;color:#9daec5">v1.9 Elbaph Batch</span></h1><div class="sub">One Piece TCG · Offline mobile battlefield prototype · No official card artwork</div>
 <div class="controls"><button onclick="openMatchSetup()">New match setup</button><button onclick="toggleBrowser()" id="browserBtn">Card database / deck import</button><button onclick="toggleUpdates()">Updates / backups</button></div>
-<div class="browser" id="updatePanel"><strong>Offline updates &amp; save backups</strong><div class="hint">Current version: 1.7.0. Checks require internet and a published HTTPS update manifest. Playing offline still works. Updates require your approval and manual file replacement on older browsers.</div>
+<div class="browser" id="updatePanel"><strong>Offline updates &amp; save backups</strong><div class="hint">Current version: 1.9.0. Checks require internet and a published HTTPS update manifest. Playing offline still works. Updates require your approval and manual file replacement on older browsers.</div>
 <div class="hint">Update manifest URL (from the developer):</div><input style="width:100%" id="updateManifestUrl" placeholder="https://your-site.example/updates/manifest.json" aria-label="Update manifest URL"><button onclick="saveUpdateUrl()">Save update source</button><button onclick="checkForUpdates(true)">Check for updates now</button><div class="msg" id="updateStatus">No update source configured.</div><div id="updateOffer" style="display:none"><button class="gold" onclick="openApprovedUpdate()">Get approved update</button><div class="hint">Save your match and export a backup first. Download and replace this HTML manually; the old file cannot overwrite itself.</div></div>
 <div class="hint">Backup your saved match before updating, especially if you move the HTML to another folder or browser. Tap Export, then copy the text into a note or text file. To restore, paste it below and tap Import.</div><button onclick="exportSaveBackup()">Export saved match backup</button><button onclick="importSaveBackup()">Import saved match backup</button><textarea id="backupText" style="width:100%;height:65px" placeholder="Paste exported save backup here"></textarea><div class="hint">No account or cloud sync. The backup includes the saved match and event log; keep it private.</div></div>
-<div class="browser" id="cardBrowser"><strong>Card browser — English demo + Brook ID records</strong> <span class="small" id="dbCount"></span><div class="hint">Brook Leader OP15-022: Green/Black, 5000 power, 4 Life (verified). Brook deck stats and colors transcribed from your card photos. Shanks, Nami, Saul, Feed on Rage and I'm Luffy!! Counter are automated; other Event effects remain manual. Check deck legality below.</div>
+<div class="browser" id="cardBrowser"><strong>Card browser — English demo + Brook ID records</strong> <span class="small" id="dbCount"></span><div class="hint">Brook Leader OP15-022: Green/Black, 5000 power, 4 Life (verified). Brook deck stats and colors transcribed from your card photos. Elbaph batch effects partly automated; see changelog for manual abilities. Other Events remain manual. Check deck legality below.</div>
 <input id="cardSearch" onkeyup="filterCards()" placeholder="Search name or ID" aria-label="Search cards"> <select id="colorFilter" onchange="filterCards()"><option value="">All colors</option><option>Red</option><option>Blue</option><option>Green</option><option>Purple</option><option>Black</option><option>Yellow</option></select>
 <div class="results" id="cardResults"></div><div class="hint" id="legalityResult"></div>
 <div class="hint">Enter card IDs and quantities (one per line). Brook preset includes 50 cards. Photographed Brook deck stats; most card effects are not automated.</div>
@@ -64,7 +64,7 @@ button{padding:5px 7px;font-size:11px}
 <div class="panel"><div class="small">YOUR CHARACTER AREA · 5 slots · tap a card to select it</div><div class="board" id="myBoard"></div></div>
 <div class="panel"><strong>YOU</strong><div class="small"><span class="leader" id="myLeader" onclick="tapLeader('my')">Brook OP15-022 · Green/Black · 5000 power · ACTIVE</span></div><div class="stats">Life <button onclick="adjust('myLife',-1)">−</button><span class="counter" id="myLife">5</span><button onclick="adjust('myLife',1)">+</button></div><div class="small">DON!! deck remaining: <span id="myDonDeck">10</span></div><div class="stats">DON!! <button onclick="adjust('myDon',-1)">−</button><span class="counter" id="myDon">0</span><button onclick="adjust('myDon',1)">+</button></div></div>
 <div class="combat"><div class="hint" id="combatStatus">Combat: select your Leader or a Character, then tap Attack.</div><button onclick="beginAttack()">⚔ Attack</button><button onclick="playCounter()">Counter from hand</button><button onclick="playSelectedEvent()">Counter Event (auto/manual)</button><button onclick="useBlocker()">Use Blocker</button><button onclick="resolveAttack()">Resolve attack</button><button onclick="cancelAttack()">Cancel</button><button onclick="oppAttack()">Opponent attacks (demo)</button><button onclick="setOpponentCost12()">Test: opponent cost 12</button><button onclick="oppAttackCharacter()">Opponent attacks rested Character (test)</button><div class="defense" id="defenseHint">Counters require a card in hand; Blockers must be active.</div></div>
-<div class="panel"><div class="small">YOUR HAND · tap a Character then an empty slot, or select an Event and press Play Event</div><div class="hand" id="myHand"></div><div class="hand-status" id="handStatus"></div><div class="actions"><button onclick="restSelected()">Rest / Active</button><button onclick="toggleBlocker()">Toggle Blocker (demo)</button><button onclick="attachDon()">Attach 1 DON!!</button><button onclick="trashSelected()">Trash selected</button><button onclick="drawCard()">Draw card</button><button class="gold" onclick="playSelectedEvent()">Play Event (auto/manual)</button><button class="gold" id="brookAbilityBtn" onclick="activateBrook()">Brook ability (trash 4)</button><button id="deckoutTestBtn" onclick="prepareBrookDeckoutTest()">Deck-out test: leave 4</button></div><div class="small">Your deck: <span id="deckCount">0</span> · <span id="brookDeckStatus">Brook ability ready</span> · Hand: <span id="handCount">0</span> · Opp. hand: <span id="oppHandCount">0</span> · Trash: <span id="trashCount">0</span> · Available DON!!: <span id="availableDon">0</span> · Selected: <span id="selection">None</span></div></div><div class="controls"><button onclick="openMatchSetup()">Reset / new match</button><button id="mulliganBtn" onclick="mulliganHand()">Mulligan (once)</button><button onclick="shuffleRemaining()">Shuffle remaining (sandbox)</button><button onclick="clearCards()">Clear Characters</button><button class="gold" onclick="saveOfflineMatch()">Save match</button><button onclick="loadOfflineMatch()">Resume saved match</button></div><div class="panel"><strong>Event log</strong><div class="log" id="log">Ready for a practice match.</div></div><div class="footer">v1.8 offline mobile (no PC needed) · v1.0.3 deck-out test mode, Brook ability and photographed stats, shuffled opening hands and one mulligan (photo-based card stats): placeholder counters/blockers, simplified costs and DON!!; Shanks, Nami, Saul, Feed on Rage and I'm Luffy!! Counter automated; other Event effects manual; opponent AI not implemented.</div>
+<div class="panel"><div class="small">YOUR HAND · tap a Character then an empty slot, or select an Event and press Play Event</div><div class="hand" id="myHand"></div><div class="hand-status" id="handStatus"></div><div class="actions"><button onclick="restSelected()">Rest / Active</button><button onclick="toggleBlocker()">Toggle Blocker (demo)</button><button onclick="attachDon()">Attach 1 DON!!</button><button onclick="trashSelected()">Trash selected</button><button onclick="drawCard()">Draw card</button><button class="gold" onclick="playSelectedEvent()">Play Event (auto/manual)</button><button class="gold" id="brookAbilityBtn" onclick="activateBrook()">Brook ability (trash 4)</button><button id="deckoutTestBtn" onclick="prepareBrookDeckoutTest()">Deck-out test: leave 4</button></div><div class="small">Your deck: <span id="deckCount">0</span> · <span id="brookDeckStatus">Brook ability ready</span> · Hand: <span id="handCount">0</span> · Opp. hand: <span id="oppHandCount">0</span> · Trash: <span id="trashCount">0</span> · Available DON!!: <span id="availableDon">0</span> · Selected: <span id="selection">None</span></div></div><div class="controls"><button onclick="openMatchSetup()">Reset / new match</button><button id="mulliganBtn" onclick="mulliganHand()">Mulligan (once)</button><button onclick="shuffleRemaining()">Shuffle remaining (sandbox)</button><button onclick="clearCards()">Clear Characters</button><button class="gold" onclick="saveOfflineMatch()">Save match</button><button onclick="loadOfflineMatch()">Resume saved match</button></div><div class="panel"><strong>v1.9 Batch test checklist</strong><div class="small">Test Saul + Jinbe (5000/Blocker); Saul + Sanji (5000/draw 2/trash 2); Saul + Nami (Elbaph discard/draw 2); Saul + Chopper (Unblockable); Saul + Robin (power reduction); Saul + Franky (KO cost 2); Saul + Luffy (Rush); Loki (18 cost, +3000 on opponent turn); Usopp (top 3 search). Zoro protection, Gerd recovery, Loki multi-KO and Luffy revival remain manual.</div></div><div class="panel"><strong>Event log</strong><div class="log" id="log">Ready for a practice match.</div></div><div class="footer">v1.9 offline mobile (no PC needed) · v1.0.3 deck-out test mode, Brook ability and photographed stats, shuffled opening hands and one mulligan (photo-based card stats): placeholder counters/blockers, simplified costs and DON!!; Shanks, Nami, Saul, Feed on Rage and I'm Luffy!! Counter automated; other Event effects manual; opponent AI not implemented.</div>
 </div><script>
 /* ES5 only: Android 4.4 browser support. Local state per browser. */
 var OFFLINE_CARD_DATA={
@@ -250,7 +250,7 @@ var OFFLINE_CARD_DATA={
       "power": 2000,
       "counter": 2000,
       "name": "Chopper",
-      "text": "Effect not yet automated. Refer to the physical card for full wording.",
+      "text": "On Play with 12+ cost Character: give a friendly Character Unblockable this turn.",
       "verified": false,
       "translations": {
         "en": {
@@ -268,7 +268,7 @@ var OFFLINE_CARD_DATA={
       "power": 2000,
       "counter": 1000,
       "name": "Nami",
-      "text": "Effect not yet automated. Refer to the physical card for full wording.",
+      "text": "On Play optionally trash an Elbaph card from hand to draw 2.",
       "verified": false,
       "translations": {
         "en": {
@@ -286,7 +286,7 @@ var OFFLINE_CARD_DATA={
       "power": 2000,
       "counter": 2000,
       "name": "Zoro",
-      "text": "Effect not yet automated. Refer to the physical card for full wording.",
+      "text": "12+ cost Character: +3000 power. Opponent effect-removal replacement (manual).",
       "verified": false,
       "translations": {
         "en": {
@@ -304,7 +304,7 @@ var OFFLINE_CARD_DATA={
       "power": 2000,
       "counter": 1000,
       "name": "Sanji",
-      "text": "Effect not yet automated. Refer to the physical card for full wording.",
+      "text": "12+ cost Character: +3000 power. On Play draw 2, trash 2 from hand.",
       "verified": false,
       "translations": {
         "en": {
@@ -322,7 +322,7 @@ var OFFLINE_CARD_DATA={
       "power": 2000,
       "counter": 1000,
       "name": "Robin",
-      "text": "Effect not yet automated. Refer to the physical card for full wording.",
+      "text": "12+ cost Character: +3000 power. On Play reduce an opposing Character power by 3000 this turn.",
       "verified": false,
       "translations": {
         "en": {
@@ -340,7 +340,7 @@ var OFFLINE_CARD_DATA={
       "power": 2000,
       "counter": 1000,
       "name": "Jinbe",
-      "text": "Effect not yet automated. Refer to the physical card for full wording.",
+      "text": "With 12+ cost Character gains Blocker and +3000 power.",
       "verified": false,
       "translations": {
         "en": {
@@ -358,7 +358,7 @@ var OFFLINE_CARD_DATA={
       "power": 2000,
       "counter": 1000,
       "name": "Franky",
-      "text": "Effect not yet automated. Refer to the physical card for full wording.",
+      "text": "12+ cost Character: +3000 power. On Play KO opposing cost-2-or-less Character.",
       "verified": false,
       "translations": {
         "en": {
@@ -394,7 +394,7 @@ var OFFLINE_CARD_DATA={
       "power": 3000,
       "counter": 2000,
       "name": "Gerd",
-      "text": "Effect not yet automated. Refer to the physical card for full wording.",
+      "text": "With Elbaph Leader gains +12 cost. On Play optional discard to recover cost-8-or-less Character (manual).",
       "verified": false,
       "translations": {
         "en": {
@@ -412,7 +412,7 @@ var OFFLINE_CARD_DATA={
       "power": 8000,
       "counter": 0,
       "name": "Luffy",
-      "text": "Effect not yet automated. Refer to the physical card for full wording.",
+      "text": "With 12+ cost Character gains Rush. On Play draw 1 and play cost-2-or-less Character from Trash (manual).",
       "verified": false,
       "translations": {
         "en": {
@@ -430,7 +430,7 @@ var OFFLINE_CARD_DATA={
       "power": 8000,
       "counter": 0,
       "name": "Loki",
-      "text": "Effect not yet automated. Refer to the physical card for full wording.",
+      "text": "Gains +12 cost and +3000 power on opponent turn. On Play KO opposing Characters totaling up to cost 4 (manual).",
       "verified": false,
       "translations": {
         "en": {
@@ -448,7 +448,7 @@ var OFFLINE_CARD_DATA={
       "power": 2000,
       "counter": 1000,
       "name": "Usopp",
-      "text": "Effect not yet automated. Refer to the physical card for full wording.",
+      "text": "12+ cost Character: +3000 power. On Play top-3 Elbaph search.",
       "verified": false,
       "translations": {
         "en": {
@@ -612,7 +612,9 @@ function log(s){var el=document.getElementById('log'),line=document.createElemen
 function adjust(k,n){if(state.gameOver){log('Match finished. Reset to play again.');return;}if(k==='myDon'){state.myDon=Math.max(state.mySpent,Math.min(10,state.myDon+n));}else{state[k]=Math.max(0,Math.min(10,state[k]+n));}render();}
 function available(){return Math.max(0,state.myDon-state.mySpent);}
 function renderCounters(){var keys=['myLife','oppLife','myDon','oppDon'];for(var i=0;i<keys.length;i++)document.getElementById(keys[i]).innerHTML=state[keys[i]];document.getElementById('turn').innerHTML=state.turn;document.getElementById('active').innerHTML=state.active;document.getElementById('phase').innerHTML=phases[state.phase];document.getElementById('phaseBtn').innerHTML=state.phase===4?'End turn':'Next phase';document.getElementById('myDonDeck').innerHTML=state.myDonDeck;document.getElementById('oppDonDeck').innerHTML=state.oppDonDeck;document.getElementById('deckCount').innerHTML=state.deck.length;document.getElementById('brookDeckStatus').innerHTML=state.brookDeckOutTurn?'Deck-out: lose at end of turn '+state.brookDeckOutTurn:(state.brookUsed?'Brook ability used':'Brook ability ready');document.getElementById('brookAbilityBtn').disabled=!!(state.gameOver||state.brookUsed||state.active!=='You'||state.phase!==3||state.deck.length<4);document.getElementById('deckoutTestBtn').disabled=!!(state.gameOver||state.openingHand||state.brookDeckOutTurn||state.deck.length<4);document.getElementById('mulliganBtn').disabled=!!(state.mulliganUsed||!state.openingHand||state.gameOver);document.getElementById('handCount').innerHTML=state.hand.length;document.getElementById('oppHandCount').innerHTML=state.oppHandCount;document.getElementById('trashCount').innerHTML=state.trash.length;document.getElementById('availableDon').innerHTML=available();document.getElementById('selection').innerHTML=selectedLeader?selectedLeader+' Leader':selectedSlot>=0?'Your slot '+(selectedSlot+1):'None';document.getElementById('myLeader').innerHTML='Brook OP15-022 · 5000 · '+(state.myLeaderRested?'RESTED':'ACTIVE');document.getElementById('oppLeader').innerHTML='Placeholder Leader · 5000 · '+(state.oppLeaderRested?'RESTED':'ACTIVE');document.getElementById('myLeader').className='leader'+(selectedLeader==='my'?' selected':'');document.getElementById('oppLeader').className='leader'+(combat&&combat.targetSide==='opp'&&combat.targetSlot===-1?' selected':'');document.getElementById('combatStatus').innerHTML=combat?('Attack: '+combat.attackerName+' ('+combat.power+') → '+(combat.targetSide?(combat.targetSlot<0?'Leader':'slot '+(combat.targetSlot+1)):'choose opponent target')+' · counter +'+combat.counter):'Combat: select your Leader or Character, then tap Attack.';}
-function renderBoard(which){var el=document.getElementById(which+'Board'),a=state[which+'Cards'],html='';for(var i=0;i<5;i++){var c=a[i],label=c?(c.name+'<br>'+c.power+' power<br><span class="tiny">'+(c.rested?'RESTED':'ACTIVE')+' · +'+c.don+' DON!!'+' · cost '+currentCharacterCost(c)+(c.blocker?' · BLOCKER':'')+'</span>'):'Empty '+(i+1);html+='<div class="slot '+(c?'filled ':'')+(c&&c.rested?'rested ':'')+(c&&c.blocker?'blocker ':'')+(which==='my'&&selectedSlot===i?'selected':'')+(combat&&combat.targetSide===which&&combat.targetSlot===i?' target':'')+'" onclick="tapCard(\''+which+'\','+i+')">'+label+'</div>';}el.innerHTML=html;}
+function characterPower(c){if(!c)return 0;var p=c.power||0;var id=c.id||'';if(hasTwelveCostCharacter()&&/^(OP17-095|OP17-082|OP17-087|OP17-090|OP17-080|OP17-083)$/.test(id))p+=3000;if(id==='OP17-119'&&state.active==='Opponent')p+=3000;p+=(c.tempPower||0);return p;}
+function characterBlocker(c){return !!(c&&(c.blocker||(c.id==='OP17-083'&&hasTwelveCostCharacter())));}
+function renderBoard(which){var el=document.getElementById(which+'Board'),a=state[which+'Cards'],html='';for(var i=0;i<5;i++){var c=a[i],label=c?(c.name+'<br>'+characterPower(c)+' power<br><span class="tiny">'+(c.rested?'RESTED':'ACTIVE')+' · +'+c.don+' DON!!'+' · cost '+currentCharacterCost(c)+(characterBlocker(c)?' · BLOCKER':'')+(c.unblockable?' · UNBLOCKABLE':'')+'</span>'):'Empty '+(i+1);html+='<div class="slot '+(c?'filled ':'')+(c&&c.rested?'rested ':'')+(c&&characterBlocker(c)?'blocker ':'')+(which==='my'&&selectedSlot===i?'selected':'')+(combat&&combat.targetSide===which&&combat.targetSlot===i?' target':'')+'" onclick="tapCard(\''+which+'\','+i+')">'+label+'</div>';}el.innerHTML=html;}
 function renderHand(){var el=document.getElementById('myHand'),html='',i,id,c;for(i=0;i<5;i++){id=state.hand[i];if(typeof id==='number'){c=catalog[id];html+='<div class="hand-card '+(selectedHand===i?'selected':'')+'" onclick="chooseHand('+i+')"><strong>'+c.name+'</strong>Cost '+c.cost+'<br>'+c.power+' power<br>Counter +'+c.counter+'</div>';}else html+='<div class="hand-card used">Empty</div>';}el.innerHTML=html;document.getElementById('handStatus').innerHTML='Hand: '+state.hand.length+' (first 5 shown) · Tap card to select or counter during defense';}
 function render(){renderCounters();renderBoard('my');renderBoard('opp');renderHand();}
 function chooseHand(i){if(i>=state.hand.length)return;if(state.gameOver)return;selectedHand=selectedHand===i?-1:i;selectedSlot=-1;selectedLeader='';render();}
@@ -625,7 +627,8 @@ function tapCard(w,i){if(state.gameOver){log('Match finished. Reset to play agai
 /* v1.3: verified Shanks OP17-022 effect. Other card effects remain manual. */
 function onCharacterPlayed(card){
  if(!card)return;
- if(card.id==='OP17-089'){resolveSaulOnPlay();return;}
+ if(card.id==='OP17-089'||card.id==='OP17-080'){resolveSaulOnPlay(card.name);return;}
+ if(resolveBatchOnPlay(card))return;
  if(card.id!=='OP17-022')return;
  var restored=Math.min(2,state.mySpent);
  state.mySpent-=restored;
@@ -637,16 +640,34 @@ function onCharacterPlayed(card){
  log('Shanks [On Play]: rested '+rested+' opponent Character(s).');
  log('Shanks [Rush]: may attack during the turn it was played.');
 }
+
+/* v1.9 reusable Elbaph effects. Optional choices use browser prompts for legacy tablet compatibility. */
+function takeTop(n){var cards=[];for(var i=0;i<n&&state.deck.length;i++)cards.push(state.deck.shift());checkBrookDeckOut();return cards;}
+function chooseHandTrash(count,onlyElbaph){for(var t=0;t<count;t++){var opts=[],i,d;for(i=0;i<state.hand.length;i++){d=catalog[state.hand[i]]||{};if(!onlyElbaph||isElbaphCard(d))opts.push(i);}if(!opts.length){log('No eligible card to trash.');return false;}var lines=[];for(i=0;i<opts.length;i++){d=catalog[state.hand[opts[i]]]||{};lines.push((opts[i]+1)+': '+d.name);}var a=window.prompt('Choose hand card number to trash:\n'+lines.join('\n'),'');var index=Number(a)-1;if(a===null||a===''||opts.indexOf(index)<0){log('Hand trash selection skipped.');return false;}d=catalog[state.hand[index]];state.trash.push(d.name);state.hand.splice(index,1);log('Trashed '+d.name+' from hand.');}return true;}
+function drawN(n){var got=takeTop(n);for(var i=0;i<got.length;i++)state.hand.push(got[i]);log('Drew '+got.length+' card(s).');}
+function resolveBatchOnPlay(c){var id=c.id;
+ if(id==='OP17-082'){drawN(2);chooseHandTrash(2,false);return true;}
+ if(id==='OP17-086'){if(window.confirm('Nami: trash one Elbaph card from hand to draw 2?')){if(chooseHandTrash(1,true))drawN(2);}return true;}
+ if(id==='OP17-093'){drawN(1);log('Luffy: playing a cost-2-or-less Character from Trash remains manual (Trash currently stores names only).');return true;}
+ if(id==='OP17-084'){if(hasTwelveCostCharacter()){var options=[];for(var i=0;i<5;i++)if(state.myCards[i])options.push(i);var a=window.prompt('Chopper: choose your Character slot (1-5) to gain Unblockable this turn, or blank to skip.','');var k=Number(a)-1;if(a!==null&&a!==''&&options.indexOf(k)>=0){state.myCards[k].unblockable=true;log('Chopper: '+state.myCards[k].name+' gains Unblockable until end of turn.');}}return true;}
+ if(id==='OP17-087'){if(hasTwelveCostCharacter()){var a=window.prompt('Robin: choose opponent Character slot 1-5 for -3000 power, or blank to skip.','');var k=Number(a)-1;if(a!==null&&a!==''&&k>=0&&k<5&&state.oppCards[k]){state.oppCards[k].tempPower=(state.oppCards[k].tempPower||0)-3000;log('Robin: opponent slot '+(k+1)+' gets -3000 power this turn.');}}return true;}
+ if(id==='OP17-090'){if(hasTwelveCostCharacter()){var a=window.prompt('Franky: choose opponent Character slot 1-5 to KO (cost <= 2), or blank to skip.','');var k=Number(a)-1;if(a!==null&&a!==''&&k>=0&&k<5&&state.oppCards[k]&&currentCharacterCost(state.oppCards[k])<=2){log('Franky KO: '+state.oppCards[k].name);state.oppCards[k]=null;}}return true;}
+ if(id==='OP17-081'){log('Gerd: optional trash-one and recover Character from Trash remains manual (Trash currently stores names only).');return true;}
+ if(id==='OP17-119'){log('Loki: On Play KO opponent Characters with combined cost up to 4 remains manual; +12 cost and opponent-turn power are automatic.');return true;}
+ if(id==='OP17-095'){log('Zoro: effect-removal replacement remains manual; +3000 power is automatic.');return true;}
+ return false;
+}
+
 /* v1.8: Saul's printed effect, transcribed from user's card photo. */
 function currentCharacterCost(c){
  if(!c)return 0;
  var base=typeof c.cost==='number'?c.cost:3;
- return Math.max(0,base+(c.id==='OP17-089'?12:0)-(c.feedRageReduction||0));
+ return Math.max(0,base+((c.id==='OP17-089'||c.id==='OP17-119'||(c.id==='OP17-081'&&state.leaderElbaph))?12:0)-(c.feedRageReduction||0));
 }
-function resolveSaulOnPlay(){
+function resolveSaulOnPlay(sourceName){
  var top=[];
  for(var i=0;i<3&&state.deck.length;i++)top.push(state.deck.shift());
- if(!top.length){log('Saul [On Play]: deck empty; no cards to inspect.');checkBrookDeckOut();return;}
+ if(!top.length){log('Saul/Usopp [On Play]: deck empty; no cards to inspect.');checkBrookDeckOut();return;}
  var eligible=[],lines=[];
  for(var j=0;j<top.length;j++){
   var card=dbCards[top[j]]||catalog[top[j]]||{};
@@ -655,31 +676,31 @@ function resolveSaulOnPlay(){
  }
  var choice=-1;
  if(eligible.length){
-  var answer=window.prompt('Saul [On Play]: look at top '+top.length+' cards. Choose ONE Elbaph card number to reveal and add to hand, or leave blank to skip.\n'+lines.join('\n'),'');
+  var answer=window.prompt('Saul/Usopp [On Play]: look at top '+top.length+' cards. Choose ONE Elbaph card number to reveal and add to hand, or leave blank to skip.\n'+lines.join('\n'),'');
   if(answer!==null&&answer.trim()!==''){
    var n=Number(answer)-1;
    if(eligible.indexOf(n)>=0)choice=n;else log('Saul: invalid or non-Elbaph choice; no card selected.');
   }
- }else window.alert('Saul [On Play]: no Elbaph cards in the top '+top.length+'. All will be trashed.\n'+lines.join('\n'));
+ }else window.alert('Saul/Usopp [On Play]: no Elbaph cards in the top '+top.length+'. All will be trashed.\n'+lines.join('\n'));
  for(var k=0;k<top.length;k++){
   var d=dbCards[top[k]]||catalog[top[k]]||{};
-  if(k===choice){state.hand.push(top[k]);log('Saul [On Play]: revealed '+(d.name||'Unknown')+' and added it to hand.');}
-  else{state.trash.push(d.name||'Unknown');log('Saul [On Play]: trashed '+(d.name||'Unknown')+'.');}
+  if(k===choice){state.hand.push(top[k]);log('Saul/Usopp [On Play]: revealed '+(d.name||'Unknown')+' and added it to hand.');}
+  else{state.trash.push(d.name||'Unknown');log('Saul/Usopp [On Play]: trashed '+(d.name||'Unknown')+'.');}
  }
  checkBrookDeckOut();
 }
 function isElbaphCard(c){
  if(!c)return false;
- var t=(c.types||c.traits||c.attributeTypes||c.cardTypes||'');
+ var t=(c.types||c.traits||c.attributeTypes||c.cardTypes||c.subtypes||'');
  if(Array.isArray(t))t=t.join('/');
- return /elbaph/i.test(String(t))||c.id==='OP17-089';
+ return /elbaph/i.test(String(t))||/^(OP17-084|OP17-086|OP17-095|OP17-082|OP17-087|OP17-083|OP17-090|OP17-089|OP17-081|OP17-093|OP17-119|OP17-080)$/.test(c.id||'');
 }
 /* v1.7: OP17-097 and OP17-096 Counter verified; other Events manual. */
 function hasTwelveCostCharacter(){
  var sides=[state.myCards,state.oppCards];
  for(var a=0;a<sides.length;a++)for(var b=0;b<sides[a].length;b++){
   var c=sides[a][b];
-  if(c&&Math.max(0,(c.cost===undefined?0:c.cost)-(c.feedRageReduction||0))>=12)return true;
+  if(c&&currentCharacterCost(c)>=12)return true;
  }
  return false;
 }
@@ -732,7 +753,7 @@ function setOpponentCost12(){
  else {c.cost=12;c.feedRageReduction=0;}
  log("TRAINING ONLY: opponent has a cost 12 Character for testing I'm Luffy!!.");render();
 }
-function beginAttack(){if(state.gameOver)return;if(combat){log('Finish the existing attack first.');return;}if(state.active!=='You'||state.phase!==3){log('You can attack during your Main phase.');return;}var c=null,slot=-1,power=5000,name='Brook Leader';if(selectedLeader!=='my'){slot=selectedSlot;c=slot>=0?state.myCards[slot]:null;if(!c){log('Select your Leader or one of your Characters first.');return;}if(c.playedTurn===state.playerTurns&&c.id!=='OP17-022'){log('This Character was played this turn and cannot attack yet.');return;}power=c.power+c.don*1000;name=c.name;if(c.rested){log('A rested Character cannot attack.');return;}c.rested=true;}else{if(state.myLeaderRested){log('Your Leader is already rested.');return;}state.myLeaderRested=true;}combat={side:'my',slot:slot,attackerName:name,power:power,targetSide:'',targetSlot:-2,counter:0};log(name+' declares an attack. Tap opponent Leader or a rested opponent Character.');render();}
+function beginAttack(){if(state.gameOver)return;if(combat){log('Finish the existing attack first.');return;}if(state.active!=='You'||state.phase!==3){log('You can attack during your Main phase.');return;}var c=null,slot=-1,power=5000,name='Brook Leader';if(selectedLeader!=='my'){slot=selectedSlot;c=slot>=0?state.myCards[slot]:null;if(!c){log('Select your Leader or one of your Characters first.');return;}if(c.playedTurn===state.playerTurns&&c.id!=='OP17-022'&&!(c.id==='OP17-093'&&hasTwelveCostCharacter())){log('This Character was played this turn and cannot attack yet.');return;}power=characterPower(c)+c.don*1000;name=c.name;if(c.rested){log('A rested Character cannot attack.');return;}c.rested=true;}else{if(state.myLeaderRested){log('Your Leader is already rested.');return;}state.myLeaderRested=true;}combat={side:'my',slot:slot,attackerName:name,power:power,targetSide:'',targetSlot:-2,counter:0};log(name+' declares an attack. Tap opponent Leader or a rested opponent Character.');render();}
 function prepareBrookDeckoutTest(){
  if(state.gameOver){log('Start a new match to test deck-out.');return;}
  if(state.openingHand){log('Finish your mulligan decision and advance a phase before using test mode.');return;}
@@ -761,7 +782,7 @@ function activateBrook(){
 }
 function toggleBlocker(){if(state.gameOver)return;if(selectedSlot<0||!state.myCards[selectedSlot]){log('Select your Character to mark it as a demo Blocker.');return;}var c=state.myCards[selectedSlot];c.blocker=!c.blocker;log(c.name+(c.blocker?' gains':' loses')+' demo Blocker status.');render();}
 function playCounter(){if(!combat||!combat.targetSide){log('Choose an attack target first.');return;}if(combat.targetSide!=='my'){log('Opponent Counter cards are not simulated yet.');return;}if(selectedHand<0||selectedHand>=state.hand.length){log('Select a Counter card from your hand first.');return;}var card=catalog[state.hand[selectedHand]];if(!card.counter){log(card.name+' has no Counter value.');return;}combat.counter+=card.counter;state.trash.push(card.name);state.hand.splice(selectedHand,1);selectedHand=-1;log('Discarded '+card.name+' for +'+card.counter+' Counter.');render();}
-function useBlocker(){if(!combat||!combat.targetSide){log('Select an attack target first.');return;}var side=combat.targetSide,found=-1,i,c;for(i=0;i<5;i++){c=state[side+'Cards'][i];if(c&&c.blocker&&!c.rested){found=i;break;}}if(found<0){log('No active demo Blocker available for the defending player.');return;}c=state[side+'Cards'][found];c.rested=true;combat.targetSlot=found;log(c.name+' rests to Block and becomes the attack target.');render();}
+function useBlocker(){if(combat&&combat.side==='my'&&combat.slot>=0&&state.myCards[combat.slot]&&state.myCards[combat.slot].unblockable){log('Unblockable: this attack cannot be blocked.');return;}if(!combat||!combat.targetSide){log('Select an attack target first.');return;}var side=combat.targetSide,found=-1,i,c;for(i=0;i<5;i++){c=state[side+'Cards'][i];if(c&&characterBlocker(c)&&!c.rested){found=i;break;}}if(found<0){log('No active demo Blocker available for the defending player.');return;}c=state[side+'Cards'][found];c.rested=true;combat.targetSlot=found;log(c.name+' rests to Block and becomes the attack target.');render();}
 /* v1.4: Nami OP17-023 optional KO replacement. Type data is a limited training mapping. */
 var namiProtectedCrew={
  'OP17-023':1,'OP17-084':1,'OP17-086':1,'OP17-095':1,'OP17-082':1,
@@ -783,7 +804,7 @@ function tryNamiPreventKO(side,slot){
  }
  return false;
 }
-function resolveAttack(){if(!combat||!combat.targetSide){log('Choose a target first.');return;}var target=combat.targetSlot<0?null:state[combat.targetSide+'Cards'][combat.targetSlot],defPower=(target?target.power+target.don*1000:5000)+combat.counter,hit=combat.power>=defPower;if(hit){if(target){if(!tryNamiPreventKO(combat.targetSide,combat.targetSlot)){if(combat.targetSide==='my'){state.trash.push(target.name);state.mySpent=Math.max(0,state.mySpent-target.don);}state[combat.targetSide+'Cards'][combat.targetSlot]=null;log('Attack hits! '+target.name+' is KO’d.');}}else{var k=combat.targetSide==='my'?'myLife':'oppLife';if(state[k]>0){state[k]--;if(combat.targetSide==='my'){if(state.deck.length){state.hand.push(state.deck.shift());checkBrookDeckOut();log('Training approximation: drew from deck instead of a separate Life stack.');}else log('No placeholder card available for Life-to-hand.');}else{state.oppHandCount++;log('Opponent receives 1 Life card into hidden hand (counter only).');}log('Attack hits Leader! '+combat.targetSide+' loses 1 Life.');}else{state.gameOver=true;log('GAME OVER! '+(combat.targetSide==='opp'?'You win!':'Opponent wins!')+' Successful Leader hit at 0 Life.');}}}else log('Attack defended! '+combat.power+' vs '+defPower+'.');combat=null;selectedSlot=-1;selectedLeader='';render();}
+function resolveAttack(){if(!combat||!combat.targetSide){log('Choose a target first.');return;}var target=combat.targetSlot<0?null:state[combat.targetSide+'Cards'][combat.targetSlot],defPower=(target?characterPower(target)+target.don*1000:5000)+combat.counter,hit=combat.power>=defPower;if(hit){if(target){if(!tryNamiPreventKO(combat.targetSide,combat.targetSlot)){if(combat.targetSide==='my'){state.trash.push(target.name);state.mySpent=Math.max(0,state.mySpent-target.don);}state[combat.targetSide+'Cards'][combat.targetSlot]=null;log('Attack hits! '+target.name+' is KO’d.');}}else{var k=combat.targetSide==='my'?'myLife':'oppLife';if(state[k]>0){state[k]--;if(combat.targetSide==='my'){if(state.deck.length){state.hand.push(state.deck.shift());checkBrookDeckOut();log('Training approximation: drew from deck instead of a separate Life stack.');}else log('No placeholder card available for Life-to-hand.');}else{state.oppHandCount++;log('Opponent receives 1 Life card into hidden hand (counter only).');}log('Attack hits Leader! '+combat.targetSide+' loses 1 Life.');}else{state.gameOver=true;log('GAME OVER! '+(combat.targetSide==='opp'?'You win!':'Opponent wins!')+' Successful Leader hit at 0 Life.');}}}else log('Attack defended! '+combat.power+' vs '+defPower+'.');combat=null;selectedSlot=-1;selectedLeader='';render();}
 function cancelAttack(){if(!combat)return;log('Attack cancelled; attacker stays rested.');combat=null;render();}
 function oppAttack(){if(state.gameOver)return;if(state.active!=='Opponent'||state.phase!==3){log('Opponent demo attack is available during opponent Main phase.');return;}if(combat){log('Resolve the current attack first.');return;}if(state.oppLeaderRested){log('Opponent Leader is already rested.');return;}state.oppLeaderRested=true;combat={side:'opp',slot:-1,attackerName:'Opponent Leader',power:5000,targetSide:'my',targetSlot:-1,counter:0};log('Opponent Leader attacks your Leader. You may add demo counters, then resolve.');render();}
 function oppAttackCharacter(){
@@ -801,7 +822,7 @@ function enterPhase(){var side=activePrefix(),count=state.active==='You'?state.p
  if(state.phase===1){if(count===1&&state.active===state.firstPlayer)log('Starting player skips first draw.');else if(side==='my')drawCard();else{state.oppHandCount++;log('Opponent draws 1 hidden placeholder card.');}}
  if(state.phase===2){var amount=(count===1&&state.active===state.firstPlayer)?1:2;var drawn=Math.min(amount,state[side+'DonDeck']);state[side+'DonDeck']-=drawn;state[side+'Don']=Math.min(10,state[side+'Don']+drawn);log(state.active+' receives '+drawn+' DON!! ('+state[side+'DonDeck']+' in DON!! deck).');}
  if(state.phase===3)log(state.active+' enters Main phase.');if(state.phase===4)log(state.active+' enters End phase.');render();}
-function nextPhase(){if(state.openingHand){state.openingHand=false;render();}if(state.gameOver){log('Game over. Reset match to continue.');return;}if(combat){log('Resolve or cancel the attack before advancing phases.');return;}if(state.phase<4){state.phase++;enterPhase();return;}if(state.brookDeckOutTurn===state.turn){state.gameOver=true;log('GAME OVER: Brook deck-out at end of turn '+state.turn+'.');render();return;}if(state.active==='You'){for(var r=0;r<state.oppCards.length;r++){if(state.oppCards[r])delete state.oppCards[r].feedRageReduction;}state.active='Opponent';state.opponentTurns++;}else{state.active='You';state.playerTurns++;}state.turn++;state.phase=0;selectedHand=-1;selectedSlot=-1;selectedLeader='';log('Turn passed to '+state.active+'.');enterPhase();}
+function nextPhase(){if(state.openingHand){state.openingHand=false;render();}if(state.gameOver){log('Game over. Reset match to continue.');return;}if(combat){log('Resolve or cancel the attack before advancing phases.');return;}if(state.phase<4){state.phase++;enterPhase();return;}if(state.brookDeckOutTurn===state.turn){state.gameOver=true;log('GAME OVER: Brook deck-out at end of turn '+state.turn+'.');render();return;}if(state.active==='You'){for(var p=0;p<state.myCards.length;p++){if(state.myCards[p]){state.myCards[p].tempPower=0;state.myCards[p].unblockable=false;}}for(var r=0;r<state.oppCards.length;r++){if(state.oppCards[r]){delete state.oppCards[r].feedRageReduction;state.oppCards[r].tempPower=0;}}state.active='Opponent';state.opponentTurns++;}else{state.active='You';state.playerTurns++;}state.turn++;state.phase=0;selectedHand=-1;selectedSlot=-1;selectedLeader='';log('Turn passed to '+state.active+'.');enterPhase();}
 function clearCards(){if(state.gameOver)return;combat=null;state.myCards=[null,null,null,null,null];state.oppCards=[null,null,null,null,null];selectedSlot=-1;state.mySpent=0;render();log('Character areas cleared (sandbox reset).');}
 function resetBoard(){state=freshState();shuffleCards(state.deck);selectedHand=-1;selectedSlot=-1;selectedLeader='';combat=null;document.getElementById('log').innerHTML='';for(var i=0;i<5;i++)state.hand.push(state.deck.shift());log('New match: deck shuffled before drawing five cards. Mulligan available until first phase advance.');enterPhase();}
 function mulliganHand(){
@@ -908,7 +929,7 @@ function loadOfflineMatch(){
 
 
 /* ES5 compatible opt-in update checker for legacy Android browsers. */
-var GLT_VERSION='1.7.0';
+var GLT_VERSION='1.9.0';
 var gltAvailableUrl='';
 function toggleUpdates(){var p=document.getElementById('updatePanel');p.className=p.className.indexOf('open')>=0?'browser':'browser open';}
 function updateMessage(m){document.getElementById('updateStatus').innerHTML=escapeUpdateText(m);}

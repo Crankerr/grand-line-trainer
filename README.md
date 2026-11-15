@@ -1,3 +1,13 @@
-# Grand Line Trainer v1.8
+# Grand Line Trainer
 
-Upload `index.html`, `version.json`, and `legacy/Grand-Line-Trainer-OFFLINE.html` to the GitHub repo. Test Saul by playing him for 4 DON!! and checking that he appears with 16 cost, and that I'm Luffy!! can be used when he is on field. Saul's top-three selection uses confirmed Elbaph IDs only; broader trait metadata is future work.
+One Piece TCG training prototype.
+
+Hosted version: https://crankerr.github.io/grand-line-trainer/
+
+Legacy offline HTML: `legacy/Grand-Line-Trainer-OFFLINE.html`.
+
+Update checker reads `version.json` and asks before opening a download. It does **not** replace local HTML automatically. On the old tablet, network checks may fail even though offline play works.
+
+**Before switching from a local HTML file to the hosted website, export the saved match backup and import it on the website** because browser storage origins differ.
+
+Only upload card art and other assets when you have permission to publish them.
