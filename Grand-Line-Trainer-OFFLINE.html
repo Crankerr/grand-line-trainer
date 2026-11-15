@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><title>Grand Line Trainer v1.2 - Offline Update Checker</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#10151e;color:#f3f5f9;font-family:Arial,sans-serif;font-size:15px}.wrap{max-width:1050px;margin:auto;padding:10px}h1{font-size:20px;margin:5px 0;color:#ffcb70}.sub{font-size:12px;color:#9daec5;margin-bottom:8px}.panel{background:#1c2635;border:1px solid #34455c;border-radius:9px;padding:9px;margin-bottom:8px}.top{display:table;width:100%}.top>div{display:table-cell;vertical-align:middle;width:50%}.right{text-align:right}.board{display:table;width:100%;border-spacing:5px}.slot{display:table-cell;width:20%;height:85px;border:2px dashed #53647c;border-radius:6px;text-align:center;vertical-align:middle;background:#26354a;font-size:12px;cursor:pointer}.slot.filled{border-style:solid;border-color:#ffcb70;background:#3c3440}.slot.rested{background:#544a2d}.divider{text-align:center;color:#9daec5;font-size:12px;margin:5px}.controls{text-align:center}.controls button{margin:3px}button{background:#344963;color:white;border:1px solid #69819d;border-radius:5px;padding:8px 11px;font-weight:bold;cursor:pointer}button:active{background:#59718d}.gold{background:#ad6a1f}.counter{display:inline-block;min-width:28px;text-align:center;font-size:19px;font-weight:bold}.stats{display:inline-block;margin:3px 12px 3px 0}.small{font-size:12px;color:#b9c7d7}.log{max-height:70px;overflow:auto;font-size:12px;color:#c7d3e3}.footer{font-size:11px;color:#8fa1b8;text-align:center}
+
+/* Tablet landscape compact layout, compatible with Android 4.4 browsers. */
+body{font-size:12px}
+.wrap{max-width:1280px;padding:5px 7px}
+h1{font-size:16px;margin:2px 0}
+.sub{font-size:10px;margin-bottom:3px}
+.panel{padding:5px 7px;margin-bottom:4px;border-radius:6px}
+.small{font-size:10px}
+.board{border-spacing:3px}
+.slot{height:61px;font-size:10px;border-width:1px}
+.divider{margin:2px;font-size:10px}
+button{padding:5px 7px;font-size:11px}
+.controls button{margin:1px}
+.counter{font-size:14px;min-width:20px}
+.stats{margin:1px 7px 1px 0}
+.log{max-height:32px;font-size:10px}
+.footer{font-size:9px}
+@media (max-width:700px){.slot{height:52px}.wrap{padding:3px}.panel{padding:4px}.small{font-size:9px}button{padding:4px 5px}}
+
+/* v0.5 defensive indicators */
+.slot.blocker{border-color:#78bdf2}.slot .tiny{line-height:1.15}.combat .defense{color:#bce4ff;font-size:10px}
+/* Compact combat actions */
+.combat{background:#283447;border:1px solid #66768c;border-radius:5px;padding:4px;margin:3px 0;text-align:center}
+.combat button{margin:1px}.combat .hint{font-size:10px;color:#ffcb70}.slot.target{border-color:#f77;background:#533039}.leader{display:inline-block;border:1px solid #70839b;border-radius:4px;padding:3px 6px;cursor:pointer}.leader.selected{border-color:#ffcb70;background:#50452e}
+/* Compact hand and card actions */
+.hand{display:table;width:100%;border-spacing:3px}.hand-card{display:table-cell;width:20%;background:#293b50;border:1px solid #71839c;border-radius:5px;text-align:center;vertical-align:middle;padding:4px 2px;font-size:10px;cursor:pointer}.hand-card.selected{border:2px solid #ffcb70;background:#50452e}.hand-card.used{opacity:.5}.hand-card strong{display:block;font-size:11px}.actions{text-align:center}.actions button{margin:2px}.note{color:#ffcb70}.slot.selected{border-color:#6dd3b2;background:#24504b}.slot .tiny{font-size:9px;color:#d4e1f0}.hand-status{font-size:10px;color:#9daec5;text-align:center} @media(max-width:700px){.hand-card{font-size:9px;padding:3px 1px}.actions button{padding:4px}}
+
+/* v0.6 optional card browser: collapsed by default to preserve tablet layout */
+.browser{display:none;background:#202e40;border:1px solid #526781;border-radius:6px;padding:6px;margin:4px 0}.browser.open{display:block}.browser input,.browser select,.browser textarea{background:#101a28;color:#fff;border:1px solid #637b97;border-radius:4px;padding:5px;font-size:12px;max-width:100%}.browser input{width:45%}.browser .results{max-height:145px;overflow:auto}.browser .result{border-bottom:1px solid #43546b;padding:5px 2px;font-size:11px}.browser .result button{float:right}.browser textarea{width:100%;height:50px}.browser .hint{font-size:10px;color:#d4c49e}.browser .msg{font-size:11px;color:#aee6bd}
+
+/* Setup overlay shown only between matches; battlefield stays compact. */
+.setup-overlay{position:fixed;z-index:99;top:0;left:0;width:100%;height:100%;background:rgba(5,10,18,.94);overflow:auto}
+.setup-card{max-width:470px;margin:25px auto;background:#202e40;border:2px solid #c89b51;border-radius:10px;padding:15px;color:#fff}
+.setup-card h2{color:#ffcb70;margin:0 0 10px;font-size:19px}
+.setup-card label{display:block;margin:9px 0 3px;font-weight:bold}
+.setup-card select,.setup-card button{width:100%;padding:10px;font-size:14px;margin:3px 0;background:#33465e;color:#fff;border:1px solid #7b91ac;border-radius:5px}
+.setup-card button.gold{background:#b77e25;color:#fff;font-weight:bold}
+.setup-card .note{font-size:11px;color:#b9cce2;margin-top:8px;line-height:1.5}
+</style></head><body><div class="wrap">
+<h1>☠ GRAND LINE TRAINER <span style="font-size:12px;color:#9daec5">v1.2 Offline + Updates</span></h1><div class="sub">One Piece TCG · Offline mobile battlefield prototype · No official card artwork</div>
+<div class="controls"><button onclick="openMatchSetup()">New match setup</button><button onclick="toggleBrowser()" id="browserBtn">Card database / deck import</button><button onclick="toggleUpdates()">Updates / backups</button></div>
+<div class="browser" id="updatePanel"><strong>Offline updates &amp; save backups</strong><div class="hint">Current version: 1.2.0. Checks require internet and a published HTTPS update manifest. Playing offline still works. Updates require your approval and manual file replacement on older browsers.</div>
+<div class="hint">Update manifest URL (from the developer):</div><input style="width:100%" id="updateManifestUrl" placeholder="https://your-site.example/updates/manifest.json" aria-label="Update manifest URL"><button onclick="saveUpdateUrl()">Save update source</button><button onclick="checkForUpdates(true)">Check for updates now</button><div class="msg" id="updateStatus">No update source configured.</div><div id="updateOffer" style="display:none"><button class="gold" onclick="openApprovedUpdate()">Get approved update</button><div class="hint">Save your match and export a backup first. Download and replace this HTML manually; the old file cannot overwrite itself.</div></div>
+<div class="hint">Backup your saved match before updating, especially if you move the HTML to another folder or browser. Tap Export, then copy the text into a note or text file. To restore, paste it below and tap Import.</div><button onclick="exportSaveBackup()">Export saved match backup</button><button onclick="importSaveBackup()">Import saved match backup</button><textarea id="backupText" style="width:100%;height:65px" placeholder="Paste exported save backup here"></textarea><div class="hint">No account or cloud sync. The backup includes the saved match and event log; keep it private.</div></div>
+<div class="browser" id="cardBrowser"><strong>Card browser — English demo + Brook ID records</strong> <span class="small" id="dbCount"></span><div class="hint">Brook Leader OP15-022: Green/Black, 5000 power, 4 Life (verified). Brook deck stats and colors transcribed from your card photos. Effects remain manual except Brook Leader. Check deck legality below.</div>
+<input id="cardSearch" onkeyup="filterCards()" placeholder="Search name or ID" aria-label="Search cards"> <select id="colorFilter" onchange="filterCards()"><option value="">All colors</option><option>Red</option><option>Blue</option><option>Green</option><option>Purple</option><option>Black</option><option>Yellow</option></select>
+<div class="results" id="cardResults"></div><div class="hint" id="legalityResult"></div>
+<div class="hint">Enter card IDs and quantities (one per line). Brook preset includes 50 cards. Photographed Brook deck stats; most card effects are not automated.</div>
+<button onclick="loadBrookPreset()">Load My Brook Deck (50)</button> <button onclick="validateBrookDeck()">Check Brook deck legality</button> <span class="hint">Leader: OP15-022 Brook (alt art)</span><textarea id="deckImport" placeholder="DEMO-001 x4&#10;DEMO-002 x4"></textarea><button onclick="importDemoDeck()">Start match with listed deck</button> <button onclick="exportDemoDeck()">Export deck list</button><div class="msg" id="dbMessage"></div></div>
+<div id="setupOverlay" class="setup-overlay" style="display:none"><div class="setup-card">
+<h2>🏴‍☠️ Match setup</h2>
+<label for="setupDeck">Your deck</label><select id="setupDeck"><option value="brook">My Brook Deck (50 cards)</option><option value="demo">Demo training deck (30 cards)</option></select>
+<label for="setupFirst">Who goes first?</label><select id="setupFirst"><option value="You">You</option><option value="Opponent">Opponent</option></select>
+<button class="gold" onclick="startConfiguredMatch()">Shuffle &amp; draw opening hand</button>
+<button onclick="closeMatchSetup()">Cancel</button><button onclick="loadOfflineMatch()">Resume saved match</button>
+<div class="note">Shuffles before drawing five cards. One mulligan is available before the first phase advance. Brook Leader identity and Life are verified; card stats are photo-based; most effects remain manual. Opponent remains a manual demo, not AI.</div>
+</div></div><div class="panel top"><div><strong>OPPONENT</strong><div class="small"><span class="leader" id="oppLeader" onclick="tapLeader('opp')">Placeholder Leader · 5000 power · ACTIVE</span></div><div class="stats">Life <button onclick="adjust('oppLife',-1)">−</button><span class="counter" id="oppLife">5</span><button onclick="adjust('oppLife',1)">+</button></div><div class="small">DON!! deck remaining: <span id="oppDonDeck">10</span></div><div class="stats">DON!! <button onclick="adjust('oppDon',-1)">−</button><span class="counter" id="oppDon">0</span><button onclick="adjust('oppDon',1)">+</button></div></div><div class="right"><div class="small">Round <span id="turn">1</span></div><div class="small">Phase: <strong id="phase">Refresh</strong></div><div class="small">Active: <strong id="active">You</strong></div><button class="gold" onclick="nextPhase()" id="phaseBtn">Next phase</button></div></div>
+<div class="panel"><div class="small">OPPONENT CHARACTER AREA · tap to select; opponent cards are manual placeholders</div><div class="board" id="oppBoard"></div></div>
+<div class="divider">────────────── BATTLEFIELD ──────────────</div>
+<div class="panel"><div class="small">YOUR CHARACTER AREA · 5 slots · tap a card to select it</div><div class="board" id="myBoard"></div></div>
+<div class="panel"><strong>YOU</strong><div class="small"><span class="leader" id="myLeader" onclick="tapLeader('my')">Brook OP15-022 · Green/Black · 5000 power · ACTIVE</span></div><div class="stats">Life <button onclick="adjust('myLife',-1)">−</button><span class="counter" id="myLife">5</span><button onclick="adjust('myLife',1)">+</button></div><div class="small">DON!! deck remaining: <span id="myDonDeck">10</span></div><div class="stats">DON!! <button onclick="adjust('myDon',-1)">−</button><span class="counter" id="myDon">0</span><button onclick="adjust('myDon',1)">+</button></div></div>
+<div class="combat"><div class="hint" id="combatStatus">Combat: select your Leader or a Character, then tap Attack.</div><button onclick="beginAttack()">⚔ Attack</button><button onclick="playCounter()">Counter from hand</button><button onclick="useBlocker()">Use Blocker</button><button onclick="resolveAttack()">Resolve attack</button><button onclick="cancelAttack()">Cancel</button><button onclick="oppAttack()">Opponent attacks (demo)</button><div class="defense" id="defenseHint">Counters require a card in hand; Blockers must be active.</div></div>
+<div class="panel"><div class="small">YOUR HAND · tap a card, then tap an empty character slot to play it (Main phase)</div><div class="hand" id="myHand"></div><div class="hand-status" id="handStatus"></div><div class="actions"><button onclick="restSelected()">Rest / Active</button><button onclick="toggleBlocker()">Toggle Blocker (demo)</button><button onclick="attachDon()">Attach 1 DON!!</button><button onclick="trashSelected()">Trash selected</button><button onclick="drawCard()">Draw card</button><button class="gold" id="brookAbilityBtn" onclick="activateBrook()">Brook ability (trash 4)</button><button id="deckoutTestBtn" onclick="prepareBrookDeckoutTest()">Deck-out test: leave 4</button></div><div class="small">Your deck: <span id="deckCount">0</span> · <span id="brookDeckStatus">Brook ability ready</span> · Hand: <span id="handCount">0</span> · Opp. hand: <span id="oppHandCount">0</span> · Trash: <span id="trashCount">0</span> · Available DON!!: <span id="availableDon">0</span> · Selected: <span id="selection">None</span></div></div><div class="controls"><button onclick="openMatchSetup()">Reset / new match</button><button id="mulliganBtn" onclick="mulliganHand()">Mulligan (once)</button><button onclick="shuffleRemaining()">Shuffle remaining (sandbox)</button><button onclick="clearCards()">Clear Characters</button><button class="gold" onclick="saveOfflineMatch()">Save match</button><button onclick="loadOfflineMatch()">Resume saved match</button></div><div class="panel"><strong>Event log</strong><div class="log" id="log">Ready for a practice match.</div></div><div class="footer">v1.2 offline mobile (no PC needed) · v1.0.3 deck-out test mode, Brook ability and photographed stats, shuffled opening hands and one mulligan (photo-based card stats): placeholder counters/blockers, simplified costs and DON!!; no official card effects or opponent AI.</div>
+</div><script>
+/* ES5 only: Android 4.4 browser support. Local state per browser. */
+var OFFLINE_CARD_DATA={
+  "schema_version": 2,
+  "language": "en",
+  "source": "Stats and colors transcribed from user card photos. Effects not automated except Brook OP15-022 Leader ability.",
+  "cards": [
+    {
+      "id": "DEMO-001",
+      "type": "Character",
+      "color": "Red",
+      "cost": 1,
+      "power": 2000,
+      "counter": 1000,
+      "name": "Demo Deckhand",
+      "text": "Training placeholder. No official effect.",
+      "translations": {
+        "en": {
+          "name": "Demo Deckhand",
+          "text": "Training placeholder. No official effect."
+        }
+      },
+      "data_status": "training_placeholder"
+    },
+    {
+      "id": "DEMO-002",
+      "type": "Character",
+      "color": "Blue",
+      "cost": 2,
+      "power": 3000,
+      "counter": 1000,
+      "name": "Demo Navigator",
+      "text": "Training placeholder. No official effect.",
+      "translations": {
+        "en": {
+          "name": "Demo Navigator",
+          "text": "Training placeholder. No official effect."
+        }
+      },
+      "data_status": "training_placeholder"
+    },
+    {
+      "id": "DEMO-003",
+      "type": "Character",
+      "color": "Green",
+      "cost": 3,
+      "power": 4000,
+      "counter": 1000,
+      "name": "Demo Swordsman",
+      "text": "Training placeholder. No official effect.",
+      "translations": {
+        "en": {
+          "name": "Demo Swordsman",
+          "text": "Training placeholder. No official effect."
+        }
+      },
+      "data_status": "training_placeholder"
+    },
+    {
+      "id": "DEMO-004",
+      "type": "Character",
+      "color": "Purple",
+      "cost": 2,
+      "power": 3000,
+      "counter": 2000,
+      "name": "Demo Shipwright",
+      "text": "Training placeholder. No official effect.",
+      "translations": {
+        "en": {
+          "name": "Demo Shipwright",
+          "text": "Training placeholder. No official effect."
+        }
+      },
+      "data_status": "training_placeholder"
+    },
+    {
+      "id": "DEMO-005",
+      "type": "Character",
+      "color": "Black",
+      "cost": 4,
+      "power": 5000,
+      "counter": 0,
+      "name": "Demo Musician",
+      "text": "Training placeholder. No official effect.",
+      "translations": {
+        "en": {
+          "name": "Demo Musician",
+          "text": "Training placeholder. No official effect."
+        }
+      },
+      "data_status": "training_placeholder"
+    },
+    {
+      "id": "DEMO-006",
+      "type": "Character",
+      "color": "Yellow",
+      "cost": 1,
+      "power": 1000,
+      "counter": 2000,
+      "name": "Demo Lookout",
+      "text": "Training placeholder. No official effect.",
+      "translations": {
+        "en": {
+          "name": "Demo Lookout",
+          "text": "Training placeholder. No official effect."
+        }
+      },
+      "data_status": "training_placeholder"
+    },
+    {
+      "id": "DEMO-007",
+      "type": "Character",
+      "color": "Red",
+      "cost": 3,
+      "power": 4000,
+      "counter": 1000,
+      "name": "Demo Cook",
+      "text": "Training placeholder. No official effect.",
+      "translations": {
+        "en": {
+          "name": "Demo Cook",
+          "text": "Training placeholder. No official effect."
+        }
+      },
+      "data_status": "training_placeholder"
+    },
+    {
+      "id": "DEMO-008",
+      "type": "Character",
+      "color": "Blue",
+      "cost": 2,
+      "power": 2000,
+      "counter": 2000,
+      "name": "Demo Doctor",
+      "text": "Training placeholder. No official effect.",
+      "translations": {
+        "en": {
+          "name": "Demo Doctor",
+          "text": "Training placeholder. No official effect."
+        }
+      },
+      "data_status": "training_placeholder"
+    },
+    {
+      "id": "DEMO-009",
+      "type": "Character",
+      "color": "Green",
+      "cost": 4,
+      "power": 5000,
+      "counter": 1000,
+      "name": "Demo Helmsman",
+      "text": "Training placeholder. No official effect.",
+      "translations": {
+        "en": {
+          "name": "Demo Helmsman",
+          "text": "Training placeholder. No official effect."
+        }
+      },
+      "data_status": "training_placeholder"
+    },
+    {
+      "id": "DEMO-010",
+      "type": "Character",
+      "color": "Purple",
+      "cost": 5,
+      "power": 6000,
+      "counter": 0,
+      "name": "Demo Captain",
+      "text": "Training placeholder. No official effect.",
+      "translations": {
+        "en": {
+          "name": "Demo Captain",
+          "text": "Training placeholder. No official effect."
+        }
+      },
+      "data_status": "training_placeholder"
+    },
+    {
+      "id": "OP17-084",
+      "type": "Character",
+      "color": "Black",
+      "cost": 1,
+      "power": 2000,
+      "counter": 2000,
+      "name": "Chopper",
+      "text": "Effect not yet automated. Refer to the physical card for full wording.",
+      "verified": false,
+      "translations": {
+        "en": {
+          "name": "Chopper",
+          "text": "Unverified training proxy"
+        }
+      },
+      "data_status": "photo_verified_stats"
+    },
+    {
+      "id": "OP17-086",
+      "type": "Character",
+      "color": "Black",
+      "cost": 1,
+      "power": 2000,
+      "counter": 1000,
+      "name": "Nami",
+      "text": "Effect not yet automated. Refer to the physical card for full wording.",
+      "verified": false,
+      "translations": {
+        "en": {
+          "name": "Nami",
+          "text": "Unverified training proxy"
+        }
+      },
+      "data_status": "photo_verified_stats"
+    },
+    {
+      "id": "OP17-095",
+      "type": "Character",
+      "color": "Black",
+      "cost": 2,
+      "power": 2000,
+      "counter": 2000,
+      "name": "Zoro",
+      "text": "Effect not yet automated. Refer to the physical card for full wording.",
+      "verified": false,
+      "translations": {
+        "en": {
+          "name": "Zoro",
+          "text": "Unverified training proxy"
+        }
+      },
+      "data_status": "photo_verified_stats"
+    },
+    {
+      "id": "OP17-082",
+      "type": "Character",
+      "color": "Black",
+      "cost": 2,
+      "power": 2000,
+      "counter": 1000,
+      "name": "Sanji",
+      "text": "Effect not yet automated. Refer to the physical card for full wording.",
+      "verified": false,
+      "translations": {
+        "en": {
+          "name": "Sanji",
+          "text": "Unverified training proxy"
+        }
+      },
+      "data_status": "photo_verified_stats"
+    },
+    {
+      "id": "OP17-087",
+      "type": "Character",
+      "color": "Black",
+      "cost": 2,
+      "power": 2000,
+      "counter": 1000,
+      "name": "Robin",
+      "text": "Effect not yet automated. Refer to the physical card for full wording.",
+      "verified": false,
+      "translations": {
+        "en": {
+          "name": "Robin",
+          "text": "Unverified training proxy"
+        }
+      },
+      "data_status": "photo_verified_stats"
+    },
+    {
+      "id": "OP17-083",
+      "type": "Character",
+      "color": "Black",
+      "cost": 2,
+      "power": 2000,
+      "counter": 1000,
+      "name": "Jinbe",
+      "text": "Effect not yet automated. Refer to the physical card for full wording.",
+      "verified": false,
+      "translations": {
+        "en": {
+          "name": "Jinbe",
+          "text": "Unverified training proxy"
+        }
+      },
+      "data_status": "photo_verified_stats"
+    },
+    {
+      "id": "OP17-090",
+      "type": "Character",
+      "color": "Black",
+      "cost": 2,
+      "power": 2000,
+      "counter": 1000,
+      "name": "Franky",
+      "text": "Effect not yet automated. Refer to the physical card for full wording.",
+      "verified": false,
+      "translations": {
+        "en": {
+          "name": "Franky",
+          "text": "Unverified training proxy"
+        }
+      },
+      "data_status": "photo_verified_stats"
+    },
+    {
+      "id": "OP17-089",
+      "type": "Character",
+      "color": "Black",
+      "cost": 4,
+      "power": 6000,
+      "counter": 0,
+      "name": "Saul",
+      "text": "Effect not yet automated. Refer to the physical card for full wording.",
+      "verified": false,
+      "translations": {
+        "en": {
+          "name": "Saul",
+          "text": "Unverified training proxy"
+        }
+      },
+      "data_status": "photo_verified_stats"
+    },
+    {
+      "id": "OP17-081",
+      "type": "Character",
+      "color": "Black",
+      "cost": 2,
+      "power": 3000,
+      "counter": 2000,
+      "name": "Gerd",
+      "text": "Effect not yet automated. Refer to the physical card for full wording.",
+      "verified": false,
+      "translations": {
+        "en": {
+          "name": "Gerd",
+          "text": "Unverified training proxy"
+        }
+      },
+      "data_status": "photo_verified_stats"
+    },
+    {
+      "id": "OP17-093",
+      "type": "Character",
+      "color": "Black",
+      "cost": 8,
+      "power": 8000,
+      "counter": 0,
+      "name": "Luffy",
+      "text": "Effect not yet automated. Refer to the physical card for full wording.",
+      "verified": false,
+      "translations": {
+        "en": {
+          "name": "Luffy",
+          "text": "Unverified training proxy"
+        }
+      },
+      "data_status": "photo_verified_stats"
+    },
+    {
+      "id": "OP17-119",
+      "type": "Character",
+      "color": "Black",
+      "cost": 6,
+      "power": 8000,
+      "counter": 0,
+      "name": "Loki",
+      "text": "Effect not yet automated. Refer to the physical card for full wording.",
+      "verified": false,
+      "translations": {
+        "en": {
+          "name": "Loki",
+          "text": "Unverified training proxy"
+        }
+      },
+      "data_status": "photo_verified_stats"
+    },
+    {
+      "id": "OP17-080",
+      "type": "Character",
+      "color": "Black",
+      "cost": 2,
+      "power": 2000,
+      "counter": 1000,
+      "name": "Usopp",
+      "text": "Effect not yet automated. Refer to the physical card for full wording.",
+      "verified": false,
+      "translations": {
+        "en": {
+          "name": "Usopp",
+          "text": "Unverified training proxy"
+        }
+      },
+      "data_status": "photo_verified_stats"
+    },
+    {
+      "id": "OP17-022",
+      "type": "Character",
+      "color": "Green",
+      "cost": 10,
+      "power": 12000,
+      "counter": 0,
+      "name": "Shanks",
+      "text": "[Rush] (This card can attack on the turn in which it is played.) [On Play] Set up to 2 of your DON!! cards as active. Then, rest all of your opponent’s Characters.",
+      "verified": true,
+      "translations": {
+        "en": {
+          "name": "Shanks",
+          "text": "[Rush] (This card can attack on the turn in which it is played.) [On Play] Set up to 2 of your DON!! cards as active. Then, rest all of your opponent’s Characters."
+        }
+      },
+      "data_status": "photo_verified_stats"
+    },
+    {
+      "id": "OP17-023",
+      "type": "Character",
+      "color": "Green",
+      "cost": 1,
+      "power": 1000,
+      "counter": 2000,
+      "name": "Nami",
+      "text": "If one of your {East Blue} or {Straw Hat Crew} type Characters would be K.O.'d, you may rest this Character instead.",
+      "verified": true,
+      "translations": {
+        "en": {
+          "name": "Nami",
+          "text": "If one of your {East Blue} or {Straw Hat Crew} type Characters would be K.O.'d, you may rest this Character instead."
+        }
+      },
+      "data_status": "photo_verified_stats"
+    },
+    {
+      "id": "OP17-035",
+      "type": "Character",
+      "color": "Green",
+      "cost": 7,
+      "power": 8000,
+      "counter": 2000,
+      "name": "Roronoa Zoro",
+      "text": "No printed effect.",
+      "verified": true,
+      "translations": {
+        "en": {
+          "name": "Roronoa Zoro",
+          "text": "No printed effect."
+        }
+      },
+      "data_status": "photo_verified_stats"
+    },
+    {
+      "id": "OP17-097",
+      "type": "Event",
+      "color": "Black",
+      "cost": 1,
+      "power": 0,
+      "counter": 0,
+      "name": "Feed on Rage",
+      "text": "Effect not yet automated. Refer to the physical card for full wording.",
+      "verified": false,
+      "translations": {
+        "en": {
+          "name": "Feed on Rage",
+          "text": "Unverified training proxy"
+        }
+      },
+      "data_status": "photo_verified_stats"
+    },
+    {
+      "id": "OP17-096",
+      "type": "Event",
+      "color": "Black",
+      "cost": 1,
+      "power": 0,
+      "counter": 0,
+      "name": "I’m Luffy!!",
+      "text": "Effect not yet automated. Refer to the physical card for full wording.",
+      "verified": false,
+      "translations": {
+        "en": {
+          "name": "I’m Luffy!!",
+          "text": "Unverified training proxy"
+        }
+      },
+      "data_status": "photo_verified_stats"
+    },
+    {
+      "id": "OP17-038",
+      "type": "Event",
+      "color": "Green",
+      "cost": 0,
+      "power": 0,
+      "counter": 0,
+      "name": "Ugly Future",
+      "text": "Effect not yet automated. Refer to the physical card for full wording.",
+      "verified": false,
+      "translations": {
+        "en": {
+          "name": "Ugly Future",
+          "text": "Unverified training proxy"
+        }
+      },
+      "data_status": "photo_verified_stats"
+    },
+    {
+      "id": "OP17-098",
+      "type": "Event",
+      "color": "Black",
+      "cost": 1,
+      "power": 0,
+      "counter": 0,
+      "name": "Kong Gun",
+      "text": "Effect not yet automated. Refer to the physical card for full wording.",
+      "verified": false,
+      "translations": {
+        "en": {
+          "name": "Kong Gun",
+          "text": "Unverified training proxy"
+        }
+      },
+      "data_status": "photo_verified_stats"
+    }
+  ],
+  "leader": {
+    "id": "OP15-022",
+    "name": "Brook",
+    "type": "Leader",
+    "colors": [
+      "Green",
+      "Black"
+    ],
+    "power": 5000,
+    "life": 4,
+    "data_status": "verified_identity_stats",
+    "effect_status": "not_implemented",
+    "source": "https://onepiece.gg/cards/OP15-022-brook/"
+  },
+  "notes": "Only Brook leader identity/stats and three red card colors are treated as checked. Other main-deck stats are training placeholders."
+};
+var phases=['Refresh','Draw','DON!!','Main','End'];
+var state,selectedHand=-1,selectedSlot=-1,selectedLeader="",combat=null;
+var catalog=[{name:'Deckhand',cost:1,power:2000,counter:1000},{name:'Navigator',counter:1000,cost:2,power:3000},{name:'Swordsman',counter:1000,cost:3,power:4000},{name:'Shipwright',counter:2000,cost:2,power:3000},{name:'Musician',counter:0,cost:4,power:5000},{name:'Lookout',counter:2000,cost:1,power:1000},{name:'Cook',counter:1000,cost:3,power:4000},{name:'Doctor',counter:2000,cost:2,power:2000},{name:'Helmsman',counter:1000,cost:4,power:5000},{name:'Captain',counter:0,cost:5,power:6000}];
+function makeDeck(){var a=[],i;for(i=0;i<30;i++)a.push(i%catalog.length);return a;}
+function shuffleCards(cards){for(var i=cards.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),tmp=cards[i];cards[i]=cards[j];cards[j]=tmp;}return cards;}
+function freshState(){return {mulliganUsed:false,openingHand:true,firstPlayer:'You',myLife:4,oppLife:5,myDon:0,oppDon:0,myDonDeck:10,oppDonDeck:10,mySpent:0,turn:1,active:'You',phase:0,playerTurns:1,opponentTurns:0,myCards:[null,null,null,null,null],oppCards:[null,null,null,null,null],deck:makeDeck(),hand:[],trash:[],myLeaderRested:false,oppLeaderRested:false,oppHandCount:0,gameOver:false,brookUsed:false,brookDeckOutTurn:0};}
+function checkBrookDeckOut(){if(state.deck.length===0&&!state.brookDeckOutTurn){state.brookDeckOutTurn=state.turn;log("Brook: deck reached 0 cards on turn "+state.turn+". You lose at the END of this turn unless the match ends first.");}}
+function log(s){var el=document.getElementById('log'),line=document.createElement('div');line.appendChild(document.createTextNode(s));el.insertBefore(line,el.firstChild);}
+function adjust(k,n){if(state.gameOver){log('Match finished. Reset to play again.');return;}if(k==='myDon'){state.myDon=Math.max(state.mySpent,Math.min(10,state.myDon+n));}else{state[k]=Math.max(0,Math.min(10,state[k]+n));}render();}
+function available(){return Math.max(0,state.myDon-state.mySpent);}
+function renderCounters(){var keys=['myLife','oppLife','myDon','oppDon'];for(var i=0;i<keys.length;i++)document.getElementById(keys[i]).innerHTML=state[keys[i]];document.getElementById('turn').innerHTML=state.turn;document.getElementById('active').innerHTML=state.active;document.getElementById('phase').innerHTML=phases[state.phase];document.getElementById('phaseBtn').innerHTML=state.phase===4?'End turn':'Next phase';document.getElementById('myDonDeck').innerHTML=state.myDonDeck;document.getElementById('oppDonDeck').innerHTML=state.oppDonDeck;document.getElementById('deckCount').innerHTML=state.deck.length;document.getElementById('brookDeckStatus').innerHTML=state.brookDeckOutTurn?'Deck-out: lose at end of turn '+state.brookDeckOutTurn:(state.brookUsed?'Brook ability used':'Brook ability ready');document.getElementById('brookAbilityBtn').disabled=!!(state.gameOver||state.brookUsed||state.active!=='You'||state.phase!==3||state.deck.length<4);document.getElementById('deckoutTestBtn').disabled=!!(state.gameOver||state.openingHand||state.brookDeckOutTurn||state.deck.length<4);document.getElementById('mulliganBtn').disabled=!!(state.mulliganUsed||!state.openingHand||state.gameOver);document.getElementById('handCount').innerHTML=state.hand.length;document.getElementById('oppHandCount').innerHTML=state.oppHandCount;document.getElementById('trashCount').innerHTML=state.trash.length;document.getElementById('availableDon').innerHTML=available();document.getElementById('selection').innerHTML=selectedLeader?selectedLeader+' Leader':selectedSlot>=0?'Your slot '+(selectedSlot+1):'None';document.getElementById('myLeader').innerHTML='Brook OP15-022 · 5000 · '+(state.myLeaderRested?'RESTED':'ACTIVE');document.getElementById('oppLeader').innerHTML='Placeholder Leader · 5000 · '+(state.oppLeaderRested?'RESTED':'ACTIVE');document.getElementById('myLeader').className='leader'+(selectedLeader==='my'?' selected':'');document.getElementById('oppLeader').className='leader'+(combat&&combat.targetSide==='opp'&&combat.targetSlot===-1?' selected':'');document.getElementById('combatStatus').innerHTML=combat?('Attack: '+combat.attackerName+' ('+combat.power+') → '+(combat.targetSide?(combat.targetSlot<0?'Leader':'slot '+(combat.targetSlot+1)):'choose opponent target')+' · counter +'+combat.counter):'Combat: select your Leader or Character, then tap Attack.';}
+function renderBoard(which){var el=document.getElementById(which+'Board'),a=state[which+'Cards'],html='';for(var i=0;i<5;i++){var c=a[i],label=c?(c.name+'<br>'+c.power+' power<br><span class="tiny">'+(c.rested?'RESTED':'ACTIVE')+' · +'+c.don+' DON!!'+(c.blocker?' · BLOCKER':'')+'</span>'):'Empty '+(i+1);html+='<div class="slot '+(c?'filled ':'')+(c&&c.rested?'rested ':'')+(c&&c.blocker?'blocker ':'')+(which==='my'&&selectedSlot===i?'selected':'')+(combat&&combat.targetSide===which&&combat.targetSlot===i?' target':'')+'" onclick="tapCard(\''+which+'\','+i+')">'+label+'</div>';}el.innerHTML=html;}
+function renderHand(){var el=document.getElementById('myHand'),html='',i,id,c;for(i=0;i<5;i++){id=state.hand[i];if(typeof id==='number'){c=catalog[id];html+='<div class="hand-card '+(selectedHand===i?'selected':'')+'" onclick="chooseHand('+i+')"><strong>'+c.name+'</strong>Cost '+c.cost+'<br>'+c.power+' power<br>Counter +'+c.counter+'</div>';}else html+='<div class="hand-card used">Empty</div>';}el.innerHTML=html;document.getElementById('handStatus').innerHTML='Hand: '+state.hand.length+' (first 5 shown) · Tap card to select or counter during defense';}
+function render(){renderCounters();renderBoard('my');renderBoard('opp');renderHand();}
+function chooseHand(i){if(i>=state.hand.length)return;if(state.gameOver)return;selectedHand=selectedHand===i?-1:i;selectedSlot=-1;selectedLeader='';render();}
+function tapCard(w,i){if(state.gameOver){log('Match finished. Reset to play again.');return;}if(combat&&combat.targetSide===''&&w!==combat.side){if(!state[w+'Cards'][i]||!state[w+'Cards'][i].rested){log('Only rested Characters can be attacked. Select the Leader instead.');return;}combat.targetSide=w;combat.targetSlot=i;render();return;}if(combat){log('Resolve or cancel the current attack first.');return;}if(w==='opp'){var c=state.oppCards[i];if(!c)state.oppCards[i]={name:'Opponent '+(i+1),power:3000,don:0,rested:false,blocker:false};else if(!c.rested)c.rested=true;else state.oppCards[i]=null;log('Opponent slot '+(i+1)+' changed manually.');render();return;}
+ var card=state.myCards[i];if(card){selectedSlot=selectedSlot===i?-1:i;selectedHand=-1;selectedLeader='';render();return;}
+ if(selectedHand<0){log('Select a card from your hand first.');return;}
+ if(state.active!=='You'||state.phase!==3){log('You can play characters only during your Main phase.');return;}
+ var id=state.hand[selectedHand],data=catalog[id];if(data.type==='Event'){log('Event '+data.name+' has no implemented effect yet; cannot place in Character area.');return;}if(available()<data.cost){log('Not enough available DON!! to play '+data.name+' (cost '+data.cost+').');return;}
+ state.mySpent+=data.cost;state.myCards[i]={name:data.name,power:data.power,don:0,rested:false,blocker:false};state.hand.splice(selectedHand,1);selectedHand=-1;selectedSlot=i;selectedLeader='';state.myCards[i].playedTurn=state.playerTurns;log('Played '+data.name+' in slot '+(i+1)+' for '+data.cost+' DON!! (simplified cost model).');render();}
+function restSelected(){if(state.gameOver)return;if(selectedSlot<0||!state.myCards[selectedSlot]){log('Select one of your characters first.');return;}if(state.active!=='You'||state.phase!==3){log('Change character state during your Main phase.');return;}var c=state.myCards[selectedSlot];c.rested=!c.rested;log(c.name+' is now '+(c.rested?'rested':'active')+'.');render();}
+function attachDon(){if(state.gameOver)return;if(selectedSlot<0||!state.myCards[selectedSlot]){log('Select one of your characters first.');return;}if(state.active!=='You'||state.phase!==3){log('Attach DON!! during your Main phase.');return;}if(available()<1){log('No available DON!! to attach.');return;}state.mySpent++;state.myCards[selectedSlot].don++;log('Attached 1 DON!! to '+state.myCards[selectedSlot].name+'.');render();}
+function trashSelected(){if(state.gameOver)return;if(selectedSlot<0||!state.myCards[selectedSlot]){log('Select a character to trash.');return;}var c=state.myCards[selectedSlot];state.trash.push(c.name);state.mySpent=Math.max(0,state.mySpent-c.don);state.myCards[selectedSlot]=null;log(c.name+' moved to trash; attached DON!! returned to available pool.');selectedSlot=-1;render();}
+function drawCard(){if(state.gameOver)return;if(state.active!=='You'){log('Wait for your turn to draw.');return;}if(!state.deck.length){log('Deck is empty.');return;}state.hand.push(state.deck.shift());checkBrookDeckOut();log('Drew 1 card.');render();}
+function tapLeader(w){if(state.gameOver)return;if(combat&&combat.targetSide===''&&w!==combat.side){combat.targetSide=w;combat.targetSlot=-1;render();return;}if(combat){log('Resolve or cancel this attack first.');return;}if(w==='my'){selectedLeader=selectedLeader==='my'?'':'my';selectedSlot=-1;selectedHand=-1;render();}else log('Opponent Leader: choose it as an attack target after pressing Attack.');}
+function beginAttack(){if(state.gameOver)return;if(combat){log('Finish the existing attack first.');return;}if(state.active!=='You'||state.phase!==3){log('You can attack during your Main phase.');return;}var c=null,slot=-1,power=5000,name='Brook Leader';if(selectedLeader!=='my'){slot=selectedSlot;c=slot>=0?state.myCards[slot]:null;if(!c){log('Select your Leader or one of your Characters first.');return;}if(c.playedTurn===state.playerTurns){log('This Character was played this turn and cannot attack yet.');return;}power=c.power+c.don*1000;name=c.name;if(c.rested){log('A rested Character cannot attack.');return;}c.rested=true;}else{if(state.myLeaderRested){log('Your Leader is already rested.');return;}state.myLeaderRested=true;}combat={side:'my',slot:slot,attackerName:name,power:power,targetSide:'',targetSlot:-2,counter:0};log(name+' declares an attack. Tap opponent Leader or a rested opponent Character.');render();}
+function prepareBrookDeckoutTest(){
+ if(state.gameOver){log('Start a new match to test deck-out.');return;}
+ if(state.openingHand){log('Finish your mulligan decision and advance a phase before using test mode.');return;}
+ if(state.brookDeckOutTurn){log('Deck-out has already been triggered.');return;}
+ if(state.deck.length<4){log('Test mode needs at least 4 cards remaining.');return;}
+ if(!window.confirm('TEST MODE: move all but 4 cards from your draw deck to Trash? This changes the current training match.'))return;
+ var moved=0;
+ while(state.deck.length>4){var idx=state.deck.shift(),c=catalog[idx];state.trash.push(c?c.name:'Unknown card');moved++;}
+ log('TEST MODE: '+moved+' cards moved to Trash. Exactly 4 cards remain. Advance to your Main phase and activate Brook.');
+ render();
+}
+function activateBrook(){
+ if(state.gameOver||state.active!=='You'||state.phase!==3){log('Brook ability requires your Main phase.');return;}
+ if(state.brookUsed){log('Brook ability was already used this turn.');return;}
+ if(state.deck.length<4){log('Brook ability needs 4 cards to trash as its cost.');return;}
+ state.brookUsed=true;
+ for(var i=0;i<4;i++){var idx=state.deck.shift(),c=catalog[idx];state.trash.push(c?c.name:'Unknown card');}
+ log('Brook ability: trashed 4 cards from top of deck.');checkBrookDeckOut();
+ if(state.deck.length===0){
+  var choices=[],j;
+  for(j=0;j<5;j++)if(state.myCards[j]&&state.myCards[j].rested)choices.push(j+1);
+  if(choices.length){var answer=window.prompt('Brook: deck is empty. Set which rested Character slot active? ('+choices.join(', ')+') Leave blank to skip.',''+choices[0]);if(answer!==null&&answer!==''){var slot=parseInt(answer,10)-1;if(slot>=0&&slot<5&&state.myCards[slot]&&state.myCards[slot].rested){state.myCards[slot].rested=false;log('Brook reactivated Character in slot '+(slot+1)+'.');}else log('Invalid slot; no Character reactivated.');}}
+  else log('Brook: no rested Character to reactivate.');
+ }
+ render();
+}
+function toggleBlocker(){if(state.gameOver)return;if(selectedSlot<0||!state.myCards[selectedSlot]){log('Select your Character to mark it as a demo Blocker.');return;}var c=state.myCards[selectedSlot];c.blocker=!c.blocker;log(c.name+(c.blocker?' gains':' loses')+' demo Blocker status.');render();}
+function playCounter(){if(!combat||!combat.targetSide){log('Choose an attack target first.');return;}if(combat.targetSide!=='my'){log('Opponent Counter cards are not simulated yet.');return;}if(selectedHand<0||selectedHand>=state.hand.length){log('Select a Counter card from your hand first.');return;}var card=catalog[state.hand[selectedHand]];if(!card.counter){log(card.name+' has no Counter value.');return;}combat.counter+=card.counter;state.trash.push(card.name);state.hand.splice(selectedHand,1);selectedHand=-1;log('Discarded '+card.name+' for +'+card.counter+' Counter.');render();}
+function useBlocker(){if(!combat||!combat.targetSide){log('Select an attack target first.');return;}var side=combat.targetSide,found=-1,i,c;for(i=0;i<5;i++){c=state[side+'Cards'][i];if(c&&c.blocker&&!c.rested){found=i;break;}}if(found<0){log('No active demo Blocker available for the defending player.');return;}c=state[side+'Cards'][found];c.rested=true;combat.targetSlot=found;log(c.name+' rests to Block and becomes the attack target.');render();}
+function resolveAttack(){if(!combat||!combat.targetSide){log('Choose a target first.');return;}var target=combat.targetSlot<0?null:state[combat.targetSide+'Cards'][combat.targetSlot],defPower=(target?target.power+target.don*1000:5000)+combat.counter,hit=combat.power>=defPower;if(hit){if(target){if(combat.targetSide==='my'){state.trash.push(target.name);state.mySpent=Math.max(0,state.mySpent-target.don);}state[combat.targetSide+'Cards'][combat.targetSlot]=null;log('Attack hits! '+target.name+' is KO’d.');}else{var k=combat.targetSide==='my'?'myLife':'oppLife';if(state[k]>0){state[k]--;if(combat.targetSide==='my'){if(state.deck.length){state.hand.push(state.deck.shift());checkBrookDeckOut();log('Training approximation: drew from deck instead of a separate Life stack.');}else log('No placeholder card available for Life-to-hand.');}else{state.oppHandCount++;log('Opponent receives 1 Life card into hidden hand (counter only).');}log('Attack hits Leader! '+combat.targetSide+' loses 1 Life.');}else{state.gameOver=true;log('GAME OVER! '+(combat.targetSide==='opp'?'You win!':'Opponent wins!')+' Successful Leader hit at 0 Life.');}}}else log('Attack defended! '+combat.power+' vs '+defPower+'.');combat=null;selectedSlot=-1;selectedLeader='';render();}
+function cancelAttack(){if(!combat)return;log('Attack cancelled; attacker stays rested.');combat=null;render();}
+function oppAttack(){if(state.gameOver)return;if(state.active!=='Opponent'||state.phase!==3){log('Opponent demo attack is available during opponent Main phase.');return;}if(combat){log('Resolve the current attack first.');return;}if(state.oppLeaderRested){log('Opponent Leader is already rested.');return;}state.oppLeaderRested=true;combat={side:'opp',slot:-1,attackerName:'Opponent Leader',power:5000,targetSide:'my',targetSlot:-1,counter:0};log('Opponent Leader attacks your Leader. You may add demo counters, then resolve.');render();}
+function activePrefix(){return state.active==='You'?'my':'opp';}
+function enterPhase(){var side=activePrefix(),count=state.active==='You'?state.playerTurns:state.opponentTurns,i,c;
+ if(state.phase===0){for(i=0;i<5;i++){c=state[side+'Cards'][i];if(c){c.rested=false;if(side==='my')c.don=0;}}if(side==='my'){state.mySpent=0;state.myLeaderRested=false;state.brookUsed=false;}else state.oppLeaderRested=false;log(state.active+' refreshes characters'+(side==='my'?' and available DON!!':'')+'.');}
+ if(state.phase===1){if(count===1&&state.active===state.firstPlayer)log('Starting player skips first draw.');else if(side==='my')drawCard();else{state.oppHandCount++;log('Opponent draws 1 hidden placeholder card.');}}
+ if(state.phase===2){var amount=(count===1&&state.active===state.firstPlayer)?1:2;var drawn=Math.min(amount,state[side+'DonDeck']);state[side+'DonDeck']-=drawn;state[side+'Don']=Math.min(10,state[side+'Don']+drawn);log(state.active+' receives '+drawn+' DON!! ('+state[side+'DonDeck']+' in DON!! deck).');}
+ if(state.phase===3)log(state.active+' enters Main phase.');if(state.phase===4)log(state.active+' enters End phase.');render();}
+function nextPhase(){if(state.openingHand){state.openingHand=false;render();}if(state.gameOver){log('Game over. Reset match to continue.');return;}if(combat){log('Resolve or cancel the attack before advancing phases.');return;}if(state.phase<4){state.phase++;enterPhase();return;}if(state.brookDeckOutTurn===state.turn){state.gameOver=true;log('GAME OVER: Brook deck-out at end of turn '+state.turn+'.');render();return;}if(state.active==='You'){state.active='Opponent';state.opponentTurns++;}else{state.active='You';state.playerTurns++;}state.turn++;state.phase=0;selectedHand=-1;selectedSlot=-1;selectedLeader='';log('Turn passed to '+state.active+'.');enterPhase();}
+function clearCards(){if(state.gameOver)return;combat=null;state.myCards=[null,null,null,null,null];state.oppCards=[null,null,null,null,null];selectedSlot=-1;state.mySpent=0;render();log('Character areas cleared (sandbox reset).');}
+function resetBoard(){state=freshState();shuffleCards(state.deck);selectedHand=-1;selectedSlot=-1;selectedLeader='';combat=null;document.getElementById('log').innerHTML='';for(var i=0;i<5;i++)state.hand.push(state.deck.shift());log('New match: deck shuffled before drawing five cards. Mulligan available until first phase advance.');enterPhase();}
+function mulliganHand(){
+ if(state.gameOver||!state.openingHand||state.mulliganUsed){log('Mulligan is only available once before the first phase advance.');return;}
+ if(!window.confirm('Return your entire opening hand, reshuffle, and draw five new cards? This can only be done once.'))return;
+ while(state.hand.length)state.deck.push(state.hand.shift());
+ shuffleCards(state.deck);
+ for(var i=0;i<5&&state.deck.length;i++)state.hand.push(state.deck.shift());
+ state.mulliganUsed=true;selectedHand=-1;render();log('Mulligan used: opening hand returned, deck reshuffled, five cards drawn.');
+}
+function shuffleRemaining(){
+ if(state.gameOver){log('Start a new match before shuffling.');return;}
+ shuffleCards(state.deck);render();log('Sandbox shuffle: remaining draw deck shuffled ('+state.deck.length+' cards).');
+}
+resetBoard();
+
+/* v0.6: browser-side catalog, ES5 for Android 4.4. No external dependencies. */
+var dbCards=[],dbById={};
+var brookPreset="OP17-084 x4\nOP17-086 x4\nOP17-095 x4\nOP17-082 x4\nOP17-087 x4\nOP17-083 x4\nOP17-090 x4\nOP17-089 x3\nOP17-081 x2\nOP17-093 x2\nOP17-119 x1\nOP17-080 x1\nOP17-022 x1\nOP17-023 x1\nOP17-035 x1\nOP17-097 x3\nOP17-096 x3\nOP17-038 x3\nOP17-098 x1";
+function loadBrookPreset(){document.getElementById('deckImport').value=brookPreset;dbStatus('Brook preset loaded: 50 cards. Tap Start match with listed deck. Stats are transcribed from your photos; effects mostly manual.');}
+function toggleBrowser(){var e=document.getElementById('cardBrowser');e.className=e.className.indexOf('open')>=0?'browser':'browser open';if(e.className.indexOf('open')>=0)filterCards();}
+function dbStatus(msg){document.getElementById('dbMessage').innerHTML=msg;}
+function loadCardDatabase(){try{var data=OFFLINE_CARD_DATA;dbCards=data.cards||[];dbById={};for(var i=0;i<dbCards.length;i++){dbById[dbCards[i].id]=i;var d=dbCards[i];catalog[i]={name:d.name+' ['+d.id+']',cost:d.cost,power:d.power,counter:d.counter,type:d.type};}document.getElementById('dbCount').innerHTML='('+dbCards.length+' records)';filterCards();}catch(e){dbStatus('Offline database error: '+e.message);}}
+function filterCards(){var q=document.getElementById('cardSearch').value.toLowerCase(),color=document.getElementById('colorFilter').value,el=document.getElementById('cardResults'),html='',count=0;for(var i=0;i<dbCards.length;i++){var c=dbCards[i];if(color&&c.color!==color)continue;if(q&&(c.id.toLowerCase().indexOf(q)<0&&c.name.toLowerCase().indexOf(q)<0))continue;html+='<div class="result"><strong>'+c.id+' · '+c.name+'</strong> · '+c.color+' · Cost '+c.cost+' · '+c.power+' power · Counter +'+c.counter+'<div class="hint">'+c.text+'</div></div>';count++;}el.innerHTML=html||'<div class="hint">No matching cards.</div>';dbStatus(count+' matching records (Brook stats are photo-based; effects mostly manual).');}
+function importDemoDeck(){if(!dbCards.length){dbStatus('Card database not loaded.');return;}var raw=document.getElementById('deckImport').value.split(/\r?\n/),ids=[],line,match,id,qty,i,j;for(i=0;i<raw.length;i++){line=raw[i].replace(/^\s+|\s+$/g,'');if(!line)continue;match=/^((?:DEMO-\d{3}|OP\d{2}-\d{3}))(?:\s*[xX*]\s*(\d+))?$/i.exec(line);if(!match){dbStatus('Invalid line '+(i+1)+': use OP17-084 x4');return;}id=match[1].toUpperCase();qty=match[2]?parseInt(match[2],10):1;if(dbById[id]===undefined||qty<1||qty>4){dbStatus('Unknown ID or invalid quantity on line '+(i+1)+'. Max 4 per card.');return;}for(j=0;j<qty;j++)ids.push(dbById[id]);if(ids.length>50){dbStatus('Deck exceeds 50 cards.');return;}}if(!ids.length){dbStatus('Enter at least one demo card.');return;}if(!window.confirm('Start a new training match with '+ids.length+' imported deck cards?'))return;resetBoard();state.deck=shuffleCards(ids);state.hand=[];state.mulliganUsed=false;state.openingHand=true;for(i=0;i<5&&state.deck.length;i++)state.hand.push(state.deck.shift());render();dbStatus('Imported '+ids.length+' cards; shuffled before opening hand. Mulligan available.');log('Deck imported ('+ids.length+' cards), shuffled before drawing opening hand.');}
+function exportDemoDeck(){var counts={},i,id,lines=[];for(i=0;i<state.deck.length;i++){id=dbCards[state.deck[i]]?dbCards[state.deck[i]].id:'';if(id)counts[id]=(counts[id]||0)+1;}for(i=0;i<state.hand.length;i++){id=dbCards[state.hand[i]]?dbCards[state.hand[i]].id:'';if(id)counts[id]=(counts[id]||0)+1;}for(id in counts){if(counts.hasOwnProperty(id))lines.push(id+' x'+counts[id]);}document.getElementById('deckImport').value=lines.join('\n');dbStatus('Exported remaining deck and hand IDs to the text box (not played/trash cards).');}
+function openMatchSetup(){document.getElementById('setupOverlay').style.display='block';}
+function closeMatchSetup(){document.getElementById('setupOverlay').style.display='none';}
+function startConfiguredMatch(){
+ if(!dbCards.length){alert('Card database is still loading. Please try again.');return;}
+ var which=document.getElementById('setupDeck').value;
+ var first=document.getElementById('setupFirst').value;
+ var ids=[],lines,i,j,m,id,qty;
+ if(which==='brook'){
+  lines=brookPreset.split('\n');
+  for(i=0;i<lines.length;i++){
+   m=/^(OP\d{2}-\d{3}) x(\d+)$/.exec(lines[i]);
+   if(!m||dbById[m[1]]===undefined){alert('Brook card ID unavailable: '+lines[i]);return;}
+   id=dbById[m[1]];qty=parseInt(m[2],10);
+   for(j=0;j<qty;j++)ids.push(id);
+  }
+  if(ids.length!==50){alert('Brook preset should contain exactly 50 cards.');return;}
+ }
+ state=freshState();
+ state.firstPlayer=first;
+ state.active=first;
+ state.playerTurns=first==='You'?1:0;
+ state.opponentTurns=first==='Opponent'?1:0;
+ state.deck=shuffleCards(which==='brook'?ids:makeDeck());
+ state.hand=[];
+ for(i=0;i<5&&state.deck.length;i++)state.hand.push(state.deck.shift());
+ selectedHand=-1;selectedSlot=-1;selectedLeader='';combat=null;
+ document.getElementById('log').innerHTML='';
+ closeMatchSetup();
+ log('New match: '+(which==='brook'?'Brook 50-card training deck':'30-card demo deck')+' shuffled before opening hand. '+first+' goes first.');
+ log('Opening hand drawn: '+state.hand.length+' cards. One mulligan available.'); if(which==='brook')log('Brook Leader OP15-022 starts with 4 Life. This saved deck is for sandbox testing; check deck legality.');
+ enterPhase();
+}
+
+/* v1.0: explicit provenance and conservative legality checks. No guesses about unverified cards. */
+var knownCardColors={
+ 'OP17-022':'Green','OP17-023':'Green','OP17-035':'Green',
+ 'OP17-080':'Black','OP17-081':'Black','OP17-082':'Black','OP17-083':'Black',
+ 'OP17-084':'Black','OP17-086':'Black','OP17-087':'Black','OP17-089':'Black',
+ 'OP17-090':'Black','OP17-093':'Black','OP17-095':'Black',
+ 'OP17-096':'Black','OP17-097':'Black','OP17-098':'Black',
+ 'OP17-119':'Black','OP17-038':'Green'
+};
+function validateBrookDeck(){
+ var lines=brookPreset.split('\n'),count=0,invalid=[],unknown=[],counts={},i,m,id,qty,color;
+ for(i=0;i<lines.length;i++){
+  m=/^(OP\d{2}-\d{3}) x(\d+)$/.exec(lines[i]);if(!m)continue;
+  id=m[1];qty=parseInt(m[2],10);count+=qty;counts[id]=(counts[id]||0)+qty;
+  color=knownCardColors[id];
+  if(!color)unknown.push(id);
+  else if(color!=='Green'&&color!=='Black')invalid.push(id+' ('+color+', x'+qty+')');
+ }
+ var issues=[];if(count!==50)issues.push('Main deck has '+count+' cards, not 50.');
+ for(id in counts)if(counts.hasOwnProperty(id)&&counts[id]>4)issues.push(id+' exceeds four copies.');
+ if(invalid.length)issues.push('Outside Brook Green/Black colors: '+invalid.join(', ')+'.');
+ if(unknown.length)issues.push('Color not verified yet: '+unknown.join(', ')+'.');
+ var msg=issues.length?'NOT VERIFIED LEGAL: '+issues.join(' '):'No basic issues found in checked fields; full legality still requires official card data and current restrictions.';
+ document.getElementById('legalityResult').innerHTML=msg;
+ dbStatus(msg);
+ return !issues.length;
+}
+
+
+/* Optional per-device offline save. Browsers can block localStorage on file://; report errors. */
+function saveOfflineMatch(){
+ try{if(!state){alert('Start a match first.');return;}
+ var record={version:1,state:state,selectedHand:selectedHand,selectedSlot:selectedSlot,selectedLeader:selectedLeader,combat:combat,logHTML:document.getElementById('log').innerHTML};
+ window.localStorage.setItem('grand_line_trainer_offline_v1',JSON.stringify(record));
+ alert('Match saved on this device.');
+ }catch(e){alert('Saving is unavailable in this browser. Try opening the file in Chrome or use a local web server.');}
+}
+function loadOfflineMatch(){
+ try{var raw=window.localStorage.getItem('grand_line_trainer_offline_v1');if(!raw){alert('No saved match on this device.');return;}
+ var record=JSON.parse(raw);if(record.version!==1||!record.state||!record.state.deck||!record.state.hand){alert('Saved match format not supported.');return;}
+ state=record.state;selectedHand=record.selectedHand;selectedSlot=record.selectedSlot;selectedLeader=record.selectedLeader||'';combat=record.combat||null;
+ document.getElementById('log').innerHTML=record.logHTML||'';closeMatchSetup();render();alert('Saved match restored.');
+ }catch(e){alert('Could not restore saved match in this browser.');}
+}
+
+
+/* ES5 compatible opt-in update checker for legacy Android browsers. */
+var GLT_VERSION='1.2.0';
+var gltAvailableUrl='';
+function toggleUpdates(){var p=document.getElementById('updatePanel');p.className=p.className.indexOf('open')>=0?'browser':'browser open';}
+function updateMessage(m){document.getElementById('updateStatus').innerHTML=escapeUpdateText(m);}
+function escapeUpdateText(t){return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function saveUpdateUrl(){
+ var u=document.getElementById('updateManifestUrl').value.replace(/^\s+|\s+$/g,'');
+ if(u && !/^https:\/\/[a-z0-9.-]+(?::[0-9]+)?\//i.test(u)){updateMessage('Please use a full HTTPS manifest URL.');return;}
+ try{window.localStorage.setItem('glt_update_manifest_url',u);updateMessage(u?'Update source saved. Checking now...':'Update source cleared.');}catch(e){updateMessage('This browser cannot remember update settings. You can still check manually.');}
+ if(u)checkForUpdates(false);
+}
+function versionParts(v){if(!/^\d+\.\d+\.\d+$/.test(v))return null;var a=v.split('.');return [parseInt(a[0],10),parseInt(a[1],10),parseInt(a[2],10)];}
+function isNewer(v,cur){var a=versionParts(v),b=versionParts(cur),i;if(!a||!b)return false;for(i=0;i<3;i++){if(a[i]>b[i])return true;if(a[i]<b[i])return false;}return false;}
+function checkForUpdates(manual){
+ var url=document.getElementById('updateManifestUrl').value.replace(/^\s+|\s+$/g,'');
+ document.getElementById('updateOffer').style.display='none';gltAvailableUrl='';
+ if(!url){if(manual)updateMessage('No update source yet. The developer must publish an HTTPS manifest before automatic checks can work.');return;}
+ if(!/^https:\/\/[a-z0-9.-]+(?::[0-9]+)?\//i.test(url)){updateMessage('Update source must be HTTPS.');return;}
+ updateMessage('Checking for updates...');
+ try{
+  var xhr=new XMLHttpRequest();xhr.open('GET',url+(url.indexOf('?')>=0?'&':'?')+'glt_check='+encodeURIComponent(GLT_VERSION),true);xhr.timeout=12000;
+  xhr.onreadystatechange=function(){if(xhr.readyState!==4)return;
+   if(xhr.status!==200){updateMessage('Could not check for updates (HTTP '+xhr.status+'). Offline play is unaffected.');return;}
+   try{var m=JSON.parse(xhr.responseText);
+    if(!m||typeof m.version!=='string'||typeof m.download_url!=='string'||!versionParts(m.version)||!/^https:\/\//i.test(m.download_url)){updateMessage('Update manifest is invalid.');return;}
+    if(isNewer(m.version,GLT_VERSION)){
+     gltAvailableUrl=m.download_url;
+     updateMessage('Version '+m.version+' is available! '+(typeof m.notes==='string'?m.notes.substring(0,200):'')+' Save your match and export a backup before downloading.');
+     document.getElementById('updateOffer').style.display='block';
+    }else updateMessage('You are up to date (v'+GLT_VERSION+').');
+   }catch(e){updateMessage('Update manifest could not be read.');}
+  };
+  xhr.onerror=function(){updateMessage('Update check blocked or unavailable. The host must allow CORS, including file:// origins. Offline play is unaffected.');};
+  xhr.ontimeout=function(){updateMessage('Update check timed out. Offline play is unaffected.');};xhr.send(null);
+ }catch(e){updateMessage('Update check unsupported in this browser. Offline play is unaffected.');}
+}
+function openApprovedUpdate(){if(!gltAvailableUrl)return;
+ if(!window.confirm('Open the update download? Your installed HTML will NOT be replaced automatically. Export a backup first.'))return;
+ window.location.href=gltAvailableUrl;
+}
+function exportSaveBackup(){
+ try{var raw=window.localStorage.getItem('grand_line_trainer_offline_v1');if(!raw){updateMessage('No saved match found. Tap Save match first.');return;}
+ var record=JSON.parse(raw);if(record.version!==1||!record.state){updateMessage('Existing save has an unknown format.');return;}
+ document.getElementById('backupText').value=JSON.stringify({format:'GLT_BACKUP_1',save:record});updateMessage('Backup prepared. Copy all the text below to a safe place.');
+ }catch(e){updateMessage('Could not export save in this browser.');}
+}
+function importSaveBackup(){
+ try{var t=document.getElementById('backupText').value;if(t.length>1500000){updateMessage('Backup too large.');return;}
+ var b=JSON.parse(t);if(!b||b.format!=='GLT_BACKUP_1'||!b.save||b.save.version!==1||!b.save.state||!b.save.state.deck||!b.save.state.hand){updateMessage('Not a compatible Grand Line Trainer save backup.');return;}
+ if(!window.confirm('Replace the saved match on this device with the imported backup?'))return;
+ window.localStorage.setItem('grand_line_trainer_offline_v1',JSON.stringify(b.save));updateMessage('Backup imported. Tap Resume saved match to load it.');
+ }catch(e){updateMessage('Could not import backup. Check that the full text was pasted and storage is enabled.');}
+}
+function initUpdateChecker(){try{var u=window.localStorage.getItem('glt_update_manifest_url')||'https://crankerr.github.io/grand-line-trainer/version.json';document.getElementById('updateManifestUrl').value=u;if(u)checkForUpdates(false);}catch(e){}}
+
+loadCardDatabase();
+initUpdateChecker();
+/* Initial screen is setup; keep a valid state underneath for rendering. */
+openMatchSetup();
+</script></body></html>
