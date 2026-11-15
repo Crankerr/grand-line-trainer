@@ -1,6 +1,5 @@
-
 {
-  "version": "1.2.0",
-  "download_url": "https://crankerr.github.io/grand-line-trainer/index.html",
-  "notes": "TEST ONLY: verifying update notifications. No new game build has been released. Do not install."
+  "version": "1.3.0",
+  "download_url": "https://crankerr.github.io/grand-line-trainer/legacy/Grand-Line-Trainer-OFFLINE.html",
+  "notes": "Shanks OP17-022 Rush and On Play effects, with battle log messages. Save format unchanged."
 }
