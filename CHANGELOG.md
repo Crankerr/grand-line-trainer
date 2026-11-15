@@ -1,9 +1,12 @@
-# v1.3 — Shanks Effects
+# v1.4 — Nami KO protection
 
-- Shanks OP17-022: Rush bypasses the played-this-turn attack restriction.
-- Shanks On Play: rest all opponent Characters and refresh up to 2 DON!! (approximation using existing spent-DON counter).
-- Battle log describes effects.
-- Same saved match key and format; keep backup before replacing files.
-- Card effects other than Brook and Shanks remain unimplemented.
-- No AI opponent; no full official rules validation.
-- Publish index.html, version.json and legacy/ to GitHub in one commit. Do not publish version.json alone until the new files are live.
+- When an eligible Straw Hat Crew character would be KO’d in **combat**, an active Green Nami OP17-023 can be rested instead after user confirmation.
+- Declining the prompt allows the KO to proceed. A rested Nami cannot replace another KO until refreshed.
+- Supports saving/restoring Nami rested status through existing match save format.
+- Keeps Brook, Shanks, GitHub Pages and offline HTML versions.
+
+## Scope and limitations
+- Only combat KO currently calls the replacement handler; future card-effect KOs need to call it too.
+- Crew eligibility is a **training mapping** based on identified Straw Hat names, not a complete verified card-type database. Characters outside the mapping are not automatically protected.
+- The current opponent demo only attacks the Leader, so testing protection requires a sandbox combat scenario that targets one of your Characters; a new demo opponent Character attack button provides a test path.
+- Card effects and DON!! timing remain incomplete; this is not a tournament-accurate simulator.
