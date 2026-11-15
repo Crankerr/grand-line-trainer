@@ -1,6 +1,7 @@
-## v1.6.0
-- Verified Feed on Rage OP17-097 Main and Counter modes.
-- Main cost reductions stack, affect only opposing Characters currently on the field, and expire at the end of your turn.
-- Counter grants +3000 to Brook only when defending a Leader attack.
-- Preserved existing Brook, Shanks, Nami, event foundation and offline save handling.
-- Other Event effects remain manual.
+# v1.8 — Jaguar D. Saul
+
+- Saul is 4 cost to play and 16 cost on field.
+- Saul On Play examines up to 3 cards, adds optionally one Elbaph card, trashes remaining cards.
+- I'm Luffy!! Counter now checks current cost 12+ on either field.
+- The card catalog does not yet have verified traits for all cards; only confirmed Elbaph identities are selectable.
+- Legacy standalone and GitHub Pages HTML match.
