@@ -1,13 +1,7 @@
-# Grand Line Trainer
+# Grand Line Trainer v1.6 — Feed on Rage
 
-One Piece TCG training prototype.
+Upload `index.html`, `version.json`, and `legacy/Grand-Line-Trainer-OFFLINE.html` to your GitHub Pages repository.
 
-Hosted version: https://crankerr.github.io/grand-line-trainer/
+OP17-097 now supports both printed modes: Main reduces the costs of opposing Characters already in play by 1 until the turn ends; Counter grants the defending Leader +3000 power during the current battle. The demo opponent Characters have placeholder printed cost 3. Other Events remain manual.
 
-Legacy offline HTML: `legacy/Grand-Line-Trainer-OFFLINE.html`.
-
-Update checker reads `version.json` and asks before opening a download. It does **not** replace local HTML automatically. On the old tablet, network checks may fail even though offline play works.
-
-**Before switching from a local HTML file to the hosted website, export the saved match backup and import it on the website** because browser storage origins differ.
-
-Only upload card art and other assets when you have permission to publish them.
+This is a training simulator, not yet a fully rules-complete game. Back up saved matches before replacing the local HTML.

@@ -1,5 +1,5 @@
 {
-  "version": "1.4.0",
-  "download_url": "https://crankerr.github.io/grand-line-trainer/legacy/Grand-Line-Trainer-OFFLINE.html",
-  "notes": "Nami OP17-023 optional KO prevention during combat; Shanks and Brook effects retained. Save format unchanged."
+  "version": "1.6.0",
+  "download_url": "https://crankerr.github.io/grand-line-trainer/index.html",
+  "notes": "Feed on Rage OP17-097: Main -1 opposing Character cost this turn; Counter +3000 to Leader. Other Event effects manual."
 }
