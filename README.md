@@ -1,13 +1,9 @@
-# Grand Line Trainer
+# Grand Line Trainer v2.2
 
-One Piece TCG training prototype.
+Upload `index.html` and `version.json` to the repository root, and `legacy/Grand-Line-Trainer-OFFLINE.html` to `legacy/`.
 
-Hosted version: https://crankerr.github.io/grand-line-trainer/
+New: long-press cards (550 ms) on touch devices, right-click on PC, or tap entries in card browser to inspect stats, local card text and beginner explanations. New Rules button with offline quick reference and official Bandai comprehensive rules PDF link.
 
-Legacy offline HTML: `legacy/Grand-Line-Trainer-OFFLINE.html`.
+No official card images or full official rulebook copied into the app. Some local card text and trainer mechanics remain incomplete/simplified.
 
-Update checker reads `version.json` and asks before opening a download. It does **not** replace local HTML automatically. On the old tablet, network checks may fail even though offline play works.
-
-**Before switching from a local HTML file to the hosted website, export the saved match backup and import it on the website** because browser storage origins differ.
-
-Only upload card art and other assets when you have permission to publish them.
+Export a save backup before updating.

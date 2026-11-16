@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><title>Grand Line Trainer v2.1 - Ability UI</title>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><title>Grand Line Trainer v2.2 - Card Inspector & Rules</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#10151e;color:#f3f5f9;font-family:Arial,sans-serif;font-size:15px}.wrap{max-width:1050px;margin:auto;padding:10px}h1{font-size:20px;margin:5px 0;color:#ffcb70}.sub{font-size:12px;color:#9daec5;margin-bottom:8px}.panel{background:#1c2635;border:1px solid #34455c;border-radius:9px;padding:9px;margin-bottom:8px}.top{display:table;width:100%}.top>div{display:table-cell;vertical-align:middle;width:50%}.right{text-align:right}.board{display:table;width:100%;border-spacing:5px}.slot{display:table-cell;width:20%;height:85px;border:2px dashed #53647c;border-radius:6px;text-align:center;vertical-align:middle;background:#26354a;font-size:12px;cursor:pointer}.slot.filled{border-style:solid;border-color:#ffcb70;background:#3c3440}.slot.rested{background:#544a2d}.divider{text-align:center;color:#9daec5;font-size:12px;margin:5px}.controls{text-align:center}.controls button{margin:3px}button{background:#344963;color:white;border:1px solid #69819d;border-radius:5px;padding:8px 11px;font-weight:bold;cursor:pointer}button:active{background:#59718d}.gold{background:#ad6a1f}.counter{display:inline-block;min-width:28px;text-align:center;font-size:19px;font-weight:bold}.stats{display:inline-block;margin:3px 12px 3px 0}.small{font-size:12px;color:#b9c7d7}.log{max-height:70px;overflow:auto;font-size:12px;color:#c7d3e3}.footer{font-size:11px;color:#8fa1b8;text-align:center}
 
@@ -65,10 +65,27 @@ button{padding:5px 7px;font-size:11px}
 .glt-modal-options{display:flex;flex-wrap:wrap;gap:7px;margin:14px 0}
 .glt-modal-options button{flex:1 1 42%;min-height:43px;white-space:normal}
 .glt-modal-options .glt-option-primary{background:#366c55}
+
+/* v2.2 inspector and rules, ES5-friendly */
+#gltInfoOverlay{display:none;position:fixed;inset:0;background:rgba(2,8,17,.88);z-index:1300;padding:9px;overflow-y:auto}
+#gltInfoOverlay.open{display:block}
+.glt-info-box{background:#192b3d;border:1px solid #6d8299;border-radius:12px;max-width:600px;margin:12px auto;padding:14px;color:#edf2f8}
+.glt-info-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.glt-info-head h2{color:#f5cf87;margin:0;font-size:19px}
+.glt-info-head button{font-size:15px}
+.glt-info-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:12px 0}
+.glt-info-stat{background:#25384a;padding:8px;border-radius:6px;font-size:13px}
+.glt-info-label{color:#9daec5;font-size:11px;display:block}
+.glt-info-effect{background:#25384a;border-radius:8px;padding:11px;white-space:pre-wrap;line-height:1.55;font-size:13px}
+.glt-info-note{font-size:12px;color:#b9cce2;line-height:1.55;margin:9px 0}
+.glt-info-box a{color:#f5cf87}
+.glt-info-box h3{font-size:15px;color:#f5cf87;margin:16px 0 6px}
+.glt-info-box p,.glt-info-box li{font-size:13px;line-height:1.55}
+.glt-inspect-hint{font-size:11px;color:#aabbd0}
 </style></head><body><div class="wrap">
-<h1>☠ GRAND LINE TRAINER <span style="font-size:12px;color:#9daec5">v2.0 Battlefield UI</span></h1><div class="sub">One Piece TCG · Offline mobile battlefield prototype · No official card artwork</div>
-<div class="glt-toolbar"><button class="gold" onclick="nextPhase()">Next phase ⏭</button><button onclick="toggleGltPanel('gltTools')">☰ Menu / tools</button><button onclick="saveOfflineMatch()">💾 Save</button></div><div id="gltTools" class="glt-fold panel controls"><button onclick="openMatchSetup()">New match setup</button><button onclick="toggleBrowser()" id="browserBtn">Card database / deck import</button><button onclick="toggleUpdates()">Updates / backups</button></div>
-<div class="browser" id="updatePanel"><strong>Offline updates &amp; save backups</strong><div class="hint">Current version: 2.1.0. Checks require internet and a published HTTPS update manifest. Playing offline still works. Updates require your approval and manual file replacement on older browsers.</div>
+<h1>☠ GRAND LINE TRAINER <span style="font-size:12px;color:#9daec5">v2.2 Card Inspector & Rules</span></h1><div class="sub">One Piece TCG · Offline mobile battlefield prototype · Hold cards to inspect · No official card artwork</div>
+<div class="glt-toolbar"><button class="gold" onclick="nextPhase()">Next phase ⏭</button><button onclick="toggleGltPanel('gltTools')">☰ Menu / tools</button><button onclick="gltShowRules()">📖 Rules</button><button onclick="saveOfflineMatch()">💾 Save</button></div><div id="gltTools" class="glt-fold panel controls"><button onclick="openMatchSetup()">New match setup</button><button onclick="toggleBrowser()" id="browserBtn">Card database / deck import</button><button onclick="toggleUpdates()">Updates / backups</button></div>
+<div class="browser" id="updatePanel"><strong>Offline updates &amp; save backups</strong><div class="hint">Current version: 2.2.0. Checks require internet and a published HTTPS update manifest. Playing offline still works. Updates require your approval and manual file replacement on older browsers.</div>
 <div class="hint">Update manifest URL (from the developer):</div><input style="width:100%" id="updateManifestUrl" placeholder="https://your-site.example/updates/manifest.json" aria-label="Update manifest URL"><button onclick="saveUpdateUrl()">Save update source</button><button onclick="checkForUpdates(true)">Check for updates now</button><div class="msg" id="updateStatus">No update source configured.</div><div id="updateOffer" style="display:none"><button class="gold" onclick="openApprovedUpdate()">Get approved update</button><div class="hint">Save your match and export a backup first. Download and replace this HTML manually; the old file cannot overwrite itself.</div></div>
 <div class="hint">Backup your saved match before updating, especially if you move the HTML to another folder or browser. Tap Export, then copy the text into a note or text file. To restore, paste it below and tap Import.</div><button onclick="exportSaveBackup()">Export saved match backup</button><button onclick="importSaveBackup()">Import saved match backup</button><textarea id="backupText" style="width:100%;height:65px" placeholder="Paste exported save backup here"></textarea><div class="hint">No account or cloud sync. The backup includes the saved match and event log; keep it private.</div></div>
 <div class="browser" id="cardBrowser"><strong>Card browser — English demo + Brook ID records</strong> <span class="small" id="dbCount"></span><div class="hint">Brook Leader OP15-022: Green/Black, 5000 power, 4 Life (verified). Brook deck stats and colors transcribed from your card photos. Elbaph batch effects partly automated; see changelog for manual abilities. Other Events remain manual. Check deck legality below.</div>
@@ -639,8 +656,8 @@ function available(){return Math.max(0,state.myDon-state.mySpent);}
 function renderCounters(){var keys=['myLife','oppLife','myDon','oppDon'];for(var i=0;i<keys.length;i++)document.getElementById(keys[i]).innerHTML=state[keys[i]];document.getElementById('turn').innerHTML=state.turn;document.getElementById('active').innerHTML=state.active;document.getElementById('phase').innerHTML=phases[state.phase];document.getElementById('phaseBtn').innerHTML=state.phase===4?'End turn':'Next phase';document.getElementById('myDonDeck').innerHTML=state.myDonDeck;document.getElementById('oppDonDeck').innerHTML=state.oppDonDeck;document.getElementById('deckCount').innerHTML=state.deck.length;document.getElementById('brookDeckStatus').innerHTML=state.brookDeckOutTurn?'Deck-out: lose at end of turn '+state.brookDeckOutTurn:(state.brookUsed?'Brook ability used':'Brook ability ready');document.getElementById('brookAbilityBtn').disabled=!!(state.gameOver||state.brookUsed||state.active!=='You'||state.phase!==3||state.deck.length<4);document.getElementById('deckoutTestBtn').disabled=!!(state.gameOver||state.openingHand||state.brookDeckOutTurn||state.deck.length<4);document.getElementById('mulliganBtn').disabled=!!(state.mulliganUsed||!state.openingHand||state.gameOver);document.getElementById('handCount').innerHTML=state.hand.length;document.getElementById('oppHandCount').innerHTML=state.oppHandCount;document.getElementById('trashCount').innerHTML=state.trash.length;document.getElementById('availableDon').innerHTML=available();document.getElementById('selection').innerHTML=selectedLeader?selectedLeader+' Leader':selectedSlot>=0?'Your slot '+(selectedSlot+1):'None';document.getElementById('myLeader').innerHTML='Brook OP15-022 · 5000 · '+(state.myLeaderRested?'RESTED':'ACTIVE');document.getElementById('oppLeader').innerHTML='Placeholder Leader · 5000 · '+(state.oppLeaderRested?'RESTED':'ACTIVE');document.getElementById('myLeader').className='leader'+(selectedLeader==='my'?' selected':'');document.getElementById('oppLeader').className='leader'+(combat&&combat.targetSide==='opp'&&combat.targetSlot===-1?' selected':'');document.getElementById('combatStatus').innerHTML=combat?('Attack: '+combat.attackerName+' ('+combat.power+') → '+(combat.targetSide?(combat.targetSlot<0?'Leader':'slot '+(combat.targetSlot+1)):'choose opponent target')+' · counter +'+combat.counter):'Combat: select your Leader or Character, then tap Attack.';}
 function characterPower(c){if(!c)return 0;var p=c.power||0;var id=c.id||'';if(hasTwelveCostCharacter()&&/^(OP17-095|OP17-082|OP17-087|OP17-090|OP17-080|OP17-083)$/.test(id))p+=3000;if(id==='OP17-119'&&state.active==='Opponent')p+=3000;p+=(c.tempPower||0);return p;}
 function characterBlocker(c){return !!(c&&(c.blocker||(c.id==='OP17-083'&&hasTwelveCostCharacter())));}
-function renderBoard(which){var el=document.getElementById(which+'Board'),a=state[which+'Cards'],html='';for(var i=0;i<5;i++){var c=a[i],label=c?(c.name+'<br>'+characterPower(c)+' power<br><span class="tiny">'+(c.rested?'RESTED':'ACTIVE')+' · +'+c.don+' DON!!'+' · cost '+currentCharacterCost(c)+(characterBlocker(c)?' · BLOCKER':'')+(c.unblockable?' · UNBLOCKABLE':'')+'</span>'):'Empty '+(i+1);html+='<div class="slot '+(c?'filled ':'')+(c&&c.rested?'rested ':'')+(c&&characterBlocker(c)?'blocker ':'')+(which==='my'&&selectedSlot===i?'selected':'')+(combat&&combat.targetSide===which&&combat.targetSlot===i?' target':'')+'" onclick="tapCard(\''+which+'\','+i+')">'+label+'</div>';}el.innerHTML=html;}
-function renderHand(){var el=document.getElementById('myHand'),html='',i,id,c,previousScroll=el.scrollLeft,shown=Math.max(5,state.hand.length);for(i=0;i<shown;i++){id=state.hand[i];if(typeof id==='number'){c=catalog[id];html+='<div class="hand-card '+(selectedHand===i?'selected':'')+'" onclick="chooseHand('+i+')"><strong>'+c.name+'</strong>Cost '+c.cost+'<br>'+c.power+' power<br>Counter +'+c.counter+'</div>';}else html+='<div class="hand-card used">Empty</div>';}el.innerHTML=html;el.scrollLeft=previousScroll;document.getElementById('handStatus').innerHTML='Hand: '+state.hand.length+' · Swipe left/right to see all cards · Tap card to select or counter during defense';}
+function renderBoard(which){var el=document.getElementById(which+'Board'),a=state[which+'Cards'],html='';for(var i=0;i<5;i++){var c=a[i],label=c?(c.name+'<br>'+characterPower(c)+' power<br><span class="tiny">'+(c.rested?'RESTED':'ACTIVE')+' · +'+c.don+' DON!!'+' · cost '+currentCharacterCost(c)+(characterBlocker(c)?' · BLOCKER':'')+(c.unblockable?' · UNBLOCKABLE':'')+'</span>'):'Empty '+(i+1);html+='<div class="slot '+(c?'filled ':'')+(c&&c.rested?'rested ':'')+(c&&characterBlocker(c)?'blocker ':'')+(which==='my'&&selectedSlot===i?'selected':'')+(combat&&combat.targetSide===which&&combat.targetSlot===i?' target':'')+'" data-glt-inspect="'+which+'" data-glt-index="'+i+'" onclick="tapCard(\''+which+'\','+i+')">'+label+'</div>';}el.innerHTML=html;}
+function renderHand(){var el=document.getElementById('myHand'),html='',i,id,c,previousScroll=el.scrollLeft,shown=Math.max(5,state.hand.length);for(i=0;i<shown;i++){id=state.hand[i];if(typeof id==='number'){c=catalog[id];html+='<div class="hand-card '+(selectedHand===i?'selected':'')+'" data-glt-inspect="hand" data-glt-index="'+i+'" onclick="chooseHand('+i+')"><strong>'+c.name+'</strong>Cost '+c.cost+'<br>'+c.power+' power<br>Counter +'+c.counter+'</div>';}else html+='<div class="hand-card used">Empty</div>';}el.innerHTML=html;el.scrollLeft=previousScroll;document.getElementById('handStatus').innerHTML='Hand: '+state.hand.length+' · Swipe left/right to see all cards · Tap card to select or counter during defense';}
 function render(){renderCounters();renderBoard('my');renderBoard('opp');renderHand();renderGltZones();}
 function toggleGltPanel(id){var e=document.getElementById(id);if(!e)return;e.className=e.className.indexOf('open')>=0?e.className.replace(' open',''):e.className+' open';}
 function renderGltZones(){if(!state)return;document.getElementById('myZoneDeck').innerHTML=state.deck.length;document.getElementById('myZoneTrash').innerHTML=state.trash.length;document.getElementById('myZoneLife').innerHTML=state.myLife;document.getElementById('oppZoneLife').innerHTML=state.oppLife;}
@@ -671,6 +688,80 @@ function onCharacterPlayed(card){
  log('Shanks [Rush]: may attack during the turn it was played.');gltToast('Shanks: Rush active; opponent Characters rested.');
 }
 
+
+
+/* v2.2: card inspector. All user-visible text is escaped. */
+function gltEscape(v){return String(v===undefined||v===null?'—':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function gltOpenInfo(title,html){document.getElementById('gltInfoTitle').textContent=title;document.getElementById('gltInfoBody').innerHTML=html;document.getElementById('gltInfoOverlay').className='open';}
+function gltCloseInfo(){document.getElementById('gltInfoOverlay').className='';}
+function gltInfoStat(label,value){return '<div class="glt-info-stat"><span class="glt-info-label">'+gltEscape(label)+'</span>'+gltEscape(value)+'</div>';}
+function gltExplainCard(id){var tips={
+ 'OP17-089':'Saul costs 4 to play but gains +12 cost on the field. His higher current cost can enable your other Elbaph abilities.',
+ 'OP17-082':'Sanji draws 2 cards and then requires you to trash 2 cards from your hand.',
+ 'OP17-086':'Nami can trade an Elbaph card from your hand for 2 drawn cards.',
+ 'OP17-084':'Chopper can grant a Character Unblockable when your field meets the 12+ cost condition.',
+ 'OP17-087':'Robin can reduce an opposing Character’s power when your field meets the 12+ cost condition.',
+ 'OP17-090':'Franky can KO an opposing low-cost Character when the 12+ cost condition is met.',
+ 'OP17-023':'Nami can be rested to prevent an eligible Character from being KO’d.',
+ 'OP17-022':'Shanks has Rush and can rest opposing Characters when played.',
+ 'OP17-119':'Loki gains cost on the field and power during the opponent’s turn. Some abilities remain manual.',
+ 'OP17-083':'Jinbe gains a power bonus and Blocker when you control a cost-12-or-more Character.',
+ 'OP17-096':'This Counter Event can give a power bonus when your field meets its cost requirement.',
+ 'OP15-022':'Brook can trash cards from your deck to enable a Character to become active. Some effects are simplified in the trainer.'
+ };return tips[id]||'Read the card text above for its printed effect. If the text is missing or incomplete, consult the official card list; not all effects are automated in this prototype.';}
+function gltInspect(kind,index){
+ var card=null,record=null,live=null,id='',key,html='';
+ if(kind==='hand'){key=state.hand[index];if(typeof key!=='number')return;card=catalog[key];}
+ else if(kind==='my'||kind==='opp'){live=state[kind+'Cards'][index];if(!live)return;card=live;}
+ else if(kind==='db'){record=dbCards[index];card=record;}
+ else if(kind==='leader'){card={id:kind==='leader'?'OP15-022':'',name:'Brook',type:'Leader',power:5000,cost:0};}
+ if(!card)return;
+ id=card.id||'';
+ if(!record&&id&&dbById[id]!==undefined)record=dbCards[dbById[id]];
+ var d=record||card;
+ var name=d.name||card.name||'Unknown card';
+ var text=d.text||'No full card text is stored for this record yet.';
+ html+='<div class="glt-info-grid">'+gltInfoStat('Card ID',id||'Training placeholder')+gltInfoStat('Type',d.type||card.type||'Character')+gltInfoStat('Color',d.color||'Not recorded')+gltInfoStat('Printed cost',d.cost===undefined?'—':d.cost)+gltInfoStat('Printed power',d.power===undefined?'—':d.power)+gltInfoStat('Counter',d.counter===undefined?'—':d.counter)+'</div>';
+ html+='<h3>Card ability text</h3><div class="glt-info-effect">'+gltEscape(text)+'</div>';
+ html+='<h3>How this card works</h3><div class="glt-info-effect">'+gltEscape(gltExplainCard(id))+'</div>';
+ if(live){html+='<h3>Current battlefield status</h3><div class="glt-info-grid">'+gltInfoStat('Current cost',currentCharacterCost(live))+gltInfoStat('Current power',characterPower(live))+gltInfoStat('State',live.rested?'Rested':'Active')+gltInfoStat('Attached DON!!',live.don||0)+'</div>';}
+ html+='<p class="glt-info-note">Card text comes from the trainer’s local database and may be incomplete. Beginner explanations are not official rulings. No official card artwork is included.</p>';
+ gltOpenInfo(name,html);
+}
+function gltShowRules(){
+ var url='https://en.onepiece-cardgame.com/pdf/rule_comprehensive.pdf';
+ var html='<p class="glt-info-note">Quick reference written for Grand Line Trainer. For authoritative rulings, use the official comprehensive rules linked below. Some simulator mechanics are still simplified.</p>'+
+ '<h3>Getting started</h3><p>Each player has 1 Leader, a 50-card main deck and a 10-card DON!! deck. Choose who plays first, draw 5 cards, optionally mulligan once, then set Life equal to the Leader’s Life value.</p>'+
+ '<h3>Turn phases</h3><p><b>Refresh → Draw → DON!! → Main → End.</b> Refresh rested cards and DON!!, draw a card (the first player skips their first-turn draw), add DON!! from the DON!! deck, then play cards, use abilities, attach DON!! and attack as permitted.</p>'+
+ '<h3>Characters and combat</h3><p>You may have up to 5 Characters and 1 Stage. Characters generally cannot attack on the turn they are played unless an effect allows it. Compare attacker and defender power; the defending player may use Counters and Blockers as permitted.</p>'+
+ '<h3>DON!! cards</h3><p>Rest active DON!! to pay card costs. DON!! attached to a Leader or Character generally gives +1000 power per attached DON!! during your turn.</p>'+
+ '<h3>Life and victory</h3><p>When your Leader takes damage, take a Life card into your hand (Triggers may apply). You lose if your Leader takes damage with no Life remaining, or if your deck has 0 cards, subject to official rule processing.</p>'+
+ '<h3>Keywords</h3><p><b>Rush:</b> can attack the turn played. <b>Blocker:</b> may redirect an eligible attack. <b>On Play:</b> resolves when played. <b>Trigger:</b> may activate when a Life card is taken due to damage. <b>Counter:</b> used during the Counter Step.</p>'+
+ '<h3>Official rulebook</h3><p><a href="'+url+'" target="_blank" rel="noopener">Open official comprehensive rules (Bandai PDF)</a></p>'+
+ '<p class="glt-info-note">The quick reference is available offline. Opening the official PDF requires internet unless you save it separately. Check the official document for exact timing, exceptions, deck legality and tournament rulings.</p>';
+ gltOpenInfo('One Piece TCG Rules',html);
+}
+(function(){
+ var holdTimer=null,holdTarget=null,holdX=0,holdY=0,suppressUntil=0;
+ function inspectElement(el){while(el&&el!==document.body){if(el.getAttribute&&el.getAttribute('data-glt-inspect'))return el;el=el.parentNode;}return null;}
+ function clearHold(){if(holdTimer!==null){clearTimeout(holdTimer);holdTimer=null;}}
+ document.addEventListener('touchstart',function(e){
+  if(!e.touches||e.touches.length!==1)return;
+  var t=inspectElement(e.target);if(!t)return;
+  holdTarget=t;holdX=e.touches[0].clientX;holdY=e.touches[0].clientY;
+  clearHold();holdTimer=setTimeout(function(){
+   holdTimer=null;if(!holdTarget)return;
+   var k=holdTarget.getAttribute('data-glt-inspect'),n=parseInt(holdTarget.getAttribute('data-glt-index'),10);
+   suppressUntil=Date.now()+800;gltInspect(k,n);holdTarget=null;
+  },550);
+ },true);
+ document.addEventListener('touchmove',function(e){if(!e.touches||!e.touches.length||Math.abs(e.touches[0].clientX-holdX)>12||Math.abs(e.touches[0].clientY-holdY)>12){clearHold();holdTarget=null;}},true);
+ document.addEventListener('touchend',function(){clearHold();holdTarget=null;},true);
+ document.addEventListener('touchcancel',function(){clearHold();holdTarget=null;},true);
+ document.addEventListener('click',function(e){if(Date.now()<suppressUntil&&inspectElement(e.target)){e.preventDefault();e.stopPropagation();suppressUntil=0;}},true);
+ document.addEventListener('contextmenu',function(e){var t=inspectElement(e.target);if(!t)return;e.preventDefault();gltInspect(t.getAttribute('data-glt-inspect'),parseInt(t.getAttribute('data-glt-index'),10));},true);
+ document.addEventListener('keydown',function(e){if(e.keyCode===27)gltCloseInfo();},true);
+})();
 
 function gltToast(message){
  var stack=document.getElementById('gltToastStack');if(!stack)return;
@@ -942,7 +1033,7 @@ function loadBrookPreset(){document.getElementById('deckImport').value=brookPres
 function toggleBrowser(){var e=document.getElementById('cardBrowser');e.className=e.className.indexOf('open')>=0?'browser':'browser open';if(e.className.indexOf('open')>=0)filterCards();}
 function dbStatus(msg){document.getElementById('dbMessage').innerHTML=msg;}
 function loadCardDatabase(){try{var data=OFFLINE_CARD_DATA;dbCards=data.cards||[];dbById={};for(var i=0;i<dbCards.length;i++){dbById[dbCards[i].id]=i;var d=dbCards[i];catalog[i]={id:d.id,name:d.name+' ['+d.id+']',cost:d.cost,power:d.power,counter:d.counter,type:d.type};}document.getElementById('dbCount').innerHTML='('+dbCards.length+' records)';filterCards();}catch(e){dbStatus('Offline database error: '+e.message);}}
-function filterCards(){var q=document.getElementById('cardSearch').value.toLowerCase(),color=document.getElementById('colorFilter').value,el=document.getElementById('cardResults'),html='',count=0;for(var i=0;i<dbCards.length;i++){var c=dbCards[i];if(color&&c.color!==color)continue;if(q&&(c.id.toLowerCase().indexOf(q)<0&&c.name.toLowerCase().indexOf(q)<0))continue;html+='<div class="result"><strong>'+c.id+' · '+c.name+'</strong> · '+c.color+' · Cost '+c.cost+' · '+c.power+' power · Counter +'+c.counter+'<div class="hint">'+c.text+'</div></div>';count++;}el.innerHTML=html||'<div class="hint">No matching cards.</div>';dbStatus(count+' matching records (Brook stats are photo-based; effects mostly manual).');}
+function filterCards(){var q=document.getElementById('cardSearch').value.toLowerCase(),color=document.getElementById('colorFilter').value,el=document.getElementById('cardResults'),html='',count=0;for(var i=0;i<dbCards.length;i++){var c=dbCards[i];if(color&&c.color!==color)continue;if(q&&(c.id.toLowerCase().indexOf(q)<0&&c.name.toLowerCase().indexOf(q)<0))continue;html+='<div class="result" data-glt-inspect="db" data-glt-index="'+i+'" onclick="gltInspect(\'db\','+i+')"><strong>'+c.id+' · '+c.name+'</strong> · '+c.color+' · Cost '+c.cost+' · '+c.power+' power · Counter +'+c.counter+'<div class="hint">'+c.text+'</div></div>';count++;}el.innerHTML=html||'<div class="hint">No matching cards.</div>';dbStatus(count+' matching records (Brook stats are photo-based; effects mostly manual).');}
 function importDemoDeck(){if(!dbCards.length){dbStatus('Card database not loaded.');return;}var raw=document.getElementById('deckImport').value.split(/\r?\n/),ids=[],line,match,id,qty,i,j;for(i=0;i<raw.length;i++){line=raw[i].replace(/^\s+|\s+$/g,'');if(!line)continue;match=/^((?:DEMO-\d{3}|OP\d{2}-\d{3}))(?:\s*[xX*]\s*(\d+))?$/i.exec(line);if(!match){dbStatus('Invalid line '+(i+1)+': use OP17-084 x4');return;}id=match[1].toUpperCase();qty=match[2]?parseInt(match[2],10):1;if(dbById[id]===undefined||qty<1||qty>4){dbStatus('Unknown ID or invalid quantity on line '+(i+1)+'. Max 4 per card.');return;}for(j=0;j<qty;j++)ids.push(dbById[id]);if(ids.length>50){dbStatus('Deck exceeds 50 cards.');return;}}if(!ids.length){dbStatus('Enter at least one demo card.');return;}if(!window.confirm('Start a new training match with '+ids.length+' imported deck cards?'))return;resetBoard();state.deck=shuffleCards(ids);state.hand=[];state.mulliganUsed=false;state.openingHand=true;for(i=0;i<5&&state.deck.length;i++)state.hand.push(state.deck.shift());render();dbStatus('Imported '+ids.length+' cards; shuffled before opening hand. Mulligan available.');log('Deck imported ('+ids.length+' cards), shuffled before drawing opening hand.');}
 function exportDemoDeck(){var counts={},i,id,lines=[];for(i=0;i<state.deck.length;i++){id=dbCards[state.deck[i]]?dbCards[state.deck[i]].id:'';if(id)counts[id]=(counts[id]||0)+1;}for(i=0;i<state.hand.length;i++){id=dbCards[state.hand[i]]?dbCards[state.hand[i]].id:'';if(id)counts[id]=(counts[id]||0)+1;}for(id in counts){if(counts.hasOwnProperty(id))lines.push(id+' x'+counts[id]);}document.getElementById('deckImport').value=lines.join('\n');dbStatus('Exported remaining deck and hand IDs to the text box (not played/trash cards).');}
 function openMatchSetup(){document.getElementById('setupOverlay').style.display='block';}
@@ -1025,7 +1116,7 @@ function loadOfflineMatch(){
 
 
 /* ES5 compatible opt-in update checker for legacy Android browsers. */
-var GLT_VERSION='2.1.0';
+var GLT_VERSION='2.2.0';
 var gltAvailableUrl='';
 function toggleUpdates(){var p=document.getElementById('updatePanel');p.className=p.className.indexOf('open')>=0?'browser':'browser open';}
 function updateMessage(m){document.getElementById('updateStatus').innerHTML=escapeUpdateText(m);}
@@ -1084,7 +1175,7 @@ loadCardDatabase();
 initUpdateChecker();
 /* Initial screen is setup; keep a valid state underneath for rendering. */
 openMatchSetup();
-</script><div id="gltToastStack" aria-live="polite"></div>
+</script><div id="gltInfoOverlay" role="dialog" aria-modal="true" aria-label="Card details and rules"><div class="glt-info-box"><div class="glt-info-head"><h2 id="gltInfoTitle">Card Details</h2><button onclick="gltCloseInfo()">✕ Close</button></div><div id="gltInfoBody"></div></div></div><div id="gltToastStack" aria-live="polite"></div>
 <div id="gltModalOverlay" role="dialog" aria-modal="true" aria-labelledby="gltModalTitle">
  <div id="gltModalBox"><h2 id="gltModalTitle"></h2><p id="gltModalDescription"></p><div class="glt-modal-options" id="gltModalOptions"></div></div>
 </div></body></html>
