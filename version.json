@@ -1,5 +1,5 @@
 {
-  "version": "2.4.0",
+  "version": "2.4.2",
   "download_url": "https://crankerr.github.io/grand-line-trainer/index.html",
-  "notes": "English-first searchable gallery with filters, card inspector, pagination, and JSON batch import. Full official catalog not yet included."
+  "notes": "Card artwork display from English set image URLs when supplied; larger inspector art; fallback when unavailable."
 }

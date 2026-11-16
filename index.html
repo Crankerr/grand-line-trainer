@@ -116,6 +116,13 @@ button{padding:5px 7px;font-size:11px}
 .glt-gallery-card .hint{font-size:11px;margin-top:5px}
 .glt-gallery-footer{display:flex;gap:8px;align-items:center;justify-content:center;margin:10px 0;flex-wrap:wrap}
 @media(max-width:400px){#gltGalleryGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+.glt-gallery-art{height:168px;position:relative;background:#111e2e}
+.glt-gallery-art img{width:100%;height:100%;object-fit:contain}
+.glt-art-fallback{font-size:11px;color:#a8bad0;text-align:center;padding:12px;line-height:1.6}
+.glt-art-fallback strong{display:block;color:#e5bd72;font-size:14px}
+.glt-info-art{max-width:230px;width:100%;max-height:340px;object-fit:contain;border-radius:9px;display:block;margin:0 auto 12px;background:#132136}
+.glt-info-art-fallback{border:1px dashed #65758c;padding:20px;border-radius:8px;text-align:center;color:#9eacc2;margin-bottom:12px}
 </style></head><body><div class="wrap">
 <h1>☠ GRAND LINE TRAINER <span style="font-size:12px;color:#9daec5">v2.4 Card Gallery</span></h1><div class="sub">One Piece TCG · Offline mobile battlefield prototype · Hold cards to inspect · No official card artwork</div>
 <div class="glt-toolbar"><button class="gold" onclick="nextPhase()">Next phase ⏭</button><button onclick="toggleGltPanel('gltTools')">☰ Menu / tools</button><button onclick="gltShowRules()">📖 Rules</button><button onclick="saveOfflineMatch()">💾 Save</button></div><div id="gltTools" class="glt-fold panel controls"><button onclick="openMatchSetup()">New match setup</button><button onclick="toggleBrowser()" id="browserBtn">Card database / deck import</button><button onclick="gltToggleGallery()">🃏 Card gallery</button><button onclick="toggleUpdates()">Updates / backups</button></div>
@@ -771,13 +778,17 @@ function gltInspect(kind,index){
  id=card.id||'';
  if(!record&&id&&dbById[id]!==undefined)record=dbCards[dbById[id]];
  var d=record||card;
+ if(kind==='db'&&gltExternalCards&&gltExternalCards[id])d=gltExternalCards[id];
  var name=d.name||card.name||'Unknown card';
  var text=d.text||'No full card text is stored for this record yet.';
+ var artUrl=gltResolveCardImage(d);
+ if(artUrl)html+='<img class="glt-info-art" src="'+gltEscape(artUrl)+'" alt="Card artwork" onerror="this.style.display=\'none\'">';
+ else html+='<div class="glt-info-art-fallback">Artwork unavailable for this card</div>';
  html+='<div class="glt-info-grid">'+gltInfoStat('Card ID',id||'Training placeholder')+gltInfoStat('Type',d.type||card.type||'Character')+gltInfoStat('Color',d.color||'Not recorded')+gltInfoStat('Printed cost',d.cost===undefined?'—':d.cost)+gltInfoStat('Printed power',d.power===undefined?'—':d.power)+gltInfoStat('Counter',d.counter===undefined?'—':d.counter)+'</div>';
  html+='<h3>Card ability text</h3><div class="glt-info-effect">'+gltEscape(text)+'</div>';
  html+='<h3>How this card works</h3><div class="glt-info-effect">'+gltEscape(gltExplainCard(id))+'</div>';
  if(live){html+='<h3>Current battlefield status</h3><div class="glt-info-grid">'+gltInfoStat('Current cost',currentCharacterCost(live))+gltInfoStat('Current power',characterPower(live))+gltInfoStat('State',live.rested?'Rested':'Active')+gltInfoStat('Attached DON!!',live.don||0)+'</div>';}
- html+='<p class="glt-info-note">Card text comes from the trainer’s local database and may be incomplete. Beginner explanations are not official rulings. No official card artwork is included.</p>';
+ html+='<p class="glt-info-note">Card text comes from the trainer’s local database and may be incomplete. Beginner explanations are not official rulings. Artwork appears only when a card-data source supplies a valid HTTPS image URL. Images may require internet and may be unavailable.</p>';
  gltOpenInfo(name,html);
 }
 function gltShowRules(){
@@ -1118,7 +1129,7 @@ function gltLoadEnglishSet(){
    for(var i=0;i<arr.length;i++){
     var c=arr[i];if(!c||!c.id||!c.name){skipped++;continue;}
     var id=String(c.id),colors=c.colors||[],clr=Object.prototype.toString.call(colors)==='[object Array]'?colors.join('/'):String(c.color||colors||'');
-    var card={id:id,name:String(c.name),type:String(c.category||c.type||'Character'),color:clr,cost:Number(c.cost)||0,power:Number(c.power)||0,counter:Number(c.counter)||0,text:String(c.effect||c.text||'')+(c.trigger?' Trigger: '+c.trigger:''),set:String(c.set||code),image_url:String(c.image||c.image_url||'')};
+    var card={id:id,name:String(c.name),type:String(c.category||c.type||'Character'),color:clr,cost:Number(c.cost)||0,power:Number(c.power)||0,counter:Number(c.counter)||0,text:String(c.effect||c.text||'')+(c.trigger?' Trigger: '+c.trigger:''),set:String(c.set||code),image_url:gltResolveCardImage(c)};
     // Protect the trainer's built-in card definitions; store external entries in gallery-only collection.
     if(gltExternalCards[id])updated++;else added++;
     gltExternalCards[id]=card;
@@ -1130,12 +1141,41 @@ function gltLoadEnglishSet(){
  xhr.ontimeout=function(){status.textContent='Request timed out. Try again later.';};
  xhr.send(null);
 }
+
+function gltImageUrl(raw){
+ if(!raw)return '';
+ if(typeof raw==='object')raw=raw.url||raw.src||raw.large||raw.full||raw.image_url||raw.image||'';
+ if(typeof raw!=='string')return '';
+ raw=raw.replace(/^\s+|\s+$/g,'');
+ if(/^https:\/\/[^\s"'<>]+$/i.test(raw))return raw;
+ return '';
+}
+function gltResolveCardImage(c){
+ if(!c)return '';
+ var fields=['image_url','image','imageUrl','imageURL','img','artwork','artwork_url','card_image','cardImage','image_link','imageLink','images'];
+ for(var i=0;i<fields.length;i++){
+  var raw=c[fields[i]];
+  if(Object.prototype.toString.call(raw)==='[object Array]')raw=raw[0];
+  var url=gltImageUrl(raw);
+  if(url)return url;
+ }
+ return '';
+}
+function gltArtFallback(c){
+ return '<div class="glt-art-fallback"><strong>'+gltGalleryEsc(c.id||'Card')+'</strong>'+gltGalleryEsc(c.name||'Unknown')+'<div>Artwork unavailable</div></div>';
+}
+function gltArtError(img){
+ var p=img.parentNode;if(!p)return;
+ var label=p.getAttribute('data-card-id')||'Card';
+ p.innerHTML='<div class="glt-art-fallback"><strong>'+gltGalleryEsc(label)+'</strong>Artwork unavailable</div>';
+}
 var gltExternalCards={};
 function gltGalleryAllCards(){var a=[],seen={};for(var i=0;i<dbCards.length;i++){var c=dbCards[i];if(gltExternalCards[c.id])a.push(gltExternalCards[c.id]);else a.push(c);seen[c.id]=true;}
 for(var id in gltExternalCards)if(gltExternalCards.hasOwnProperty(id)&&!seen[id])a.push(gltExternalCards[id]);return a;}
 function gltInspectGalleryIndex(i){var cards=gltGalleryAllCards(),c=cards[i];if(!c)return;
  // Existing inspector expects a dbCards index. For external records, temporarily append and inspect.
  var idx=dbById[c.id];if(idx===undefined){idx=dbCards.length;dbCards.push(c);dbById[c.id]=idx;}
+ else if(gltExternalCards[c.id]){dbCards[idx]=c;}
  gltInspect('db',idx);
 }
 function gltRenderGallery(){
@@ -1170,10 +1210,10 @@ function gltRenderGallery(){
  var html='',from=gltGalleryPage*gltGalleryPageSize,to=Math.min(list.length,from+gltGalleryPageSize);
  for(i=from;i<to;i++){
   var index=list[i];c=galleryCards[index];
-  var img=c.image_url||c.image||'';
-  var art=img&&/^https:\/\//i.test(img)?'<img alt="" loading="lazy" src="'+gltGalleryEsc(img)+'">':'Artwork not included';
+  var img=gltResolveCardImage(c);
+  var art=img?'<img alt="Card artwork" loading="lazy" src="'+gltGalleryEsc(img)+'" onerror="gltArtError(this)">':gltArtFallback(c);
   html+='<div class="glt-gallery-card" data-glt-inspect="db" data-glt-index="'+index+'" onclick="gltInspectGalleryIndex('+index+')">'+
-   '<div class="glt-gallery-art">'+art+'</div><strong>'+gltGalleryEsc(c.name||'Unnamed')+'</strong>'+
+   '<div class="glt-gallery-art" data-card-id="'+gltGalleryEsc(c.id||'')+'">'+art+'</div><strong>'+gltGalleryEsc(c.name||'Unnamed')+'</strong>'+
    '<div class="hint">'+gltGalleryEsc(c.id||'')+' · '+gltGalleryEsc(c.type||'')+' · '+gltGalleryEsc(c.color||'')+'</div>'+
    '<div class="hint">Cost '+gltGalleryEsc(c.cost===undefined?'—':c.cost)+' · Power '+gltGalleryEsc(c.power===undefined?'—':c.power)+'</div></div>';
  }

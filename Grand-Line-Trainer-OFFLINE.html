@@ -116,6 +116,13 @@ button{padding:5px 7px;font-size:11px}
 .glt-gallery-card .hint{font-size:11px;margin-top:5px}
 .glt-gallery-footer{display:flex;gap:8px;align-items:center;justify-content:center;margin:10px 0;flex-wrap:wrap}
 @media(max-width:400px){#gltGalleryGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+.glt-gallery-art{height:168px;position:relative;background:#111e2e}
+.glt-gallery-art img{width:100%;height:100%;object-fit:contain}
+.glt-art-fallback{font-size:11px;color:#a8bad0;text-align:center;padding:12px;line-height:1.6}
+.glt-art-fallback strong{display:block;color:#e5bd72;font-size:14px}
+.glt-info-art{max-width:230px;width:100%;max-height:340px;object-fit:contain;border-radius:9px;display:block;margin:0 auto 12px;background:#132136}
+.glt-info-art-fallback{border:1px dashed #65758c;padding:20px;border-radius:8px;text-align:center;color:#9eacc2;margin-bottom:12px}
 </style></head><body><div class="wrap">
 <h1>☠ GRAND LINE TRAINER <span style="font-size:12px;color:#9daec5">v2.4 Card Gallery</span></h1><div class="sub">One Piece TCG · Offline mobile battlefield prototype · Hold cards to inspect · No official card artwork</div>
 <div class="glt-toolbar"><button class="gold" onclick="nextPhase()">Next phase ⏭</button><button onclick="toggleGltPanel('gltTools')">☰ Menu / tools</button><button onclick="gltShowRules()">📖 Rules</button><button onclick="saveOfflineMatch()">💾 Save</button></div><div id="gltTools" class="glt-fold panel controls"><button onclick="openMatchSetup()">New match setup</button><button onclick="toggleBrowser()" id="browserBtn">Card database / deck import</button><button onclick="gltToggleGallery()">🃏 Card gallery</button><button onclick="toggleUpdates()">Updates / backups</button></div>
@@ -132,6 +139,8 @@ button{padding:5px 7px;font-size:11px}
 <select id="gltGallerySet" onchange="gltGalleryPage=0;gltRenderGallery()"><option value="">All sets</option></select>
 <select id="gltGalleryOrder" onchange="gltGalleryPage=0;gltRenderGallery()"><option value="id">Card number</option><option value="name">Name</option><option value="cost">Cost</option></select>
 </div>
+<div class="glt-gallery-controls"><select id="gltOfficialSet"><option value="">Choose English set...</option></select><button onclick="gltLoadEnglishSet()">Load English set</button></div>
+<div class="hint">Optional online import from a community-maintained dataset based on Bandai’s card list. Requires internet. Card art and text belong to their respective rights holders. Loaded records are temporary and are not guaranteed complete or tournament-current.</div>
 <div class="hint">Import a local English card-data JSON file (schema described in README). Imported records join the gallery for this session; no external service is contacted.</div>
 <input type="file" id="gltGalleryFile" accept=".json,application/json" onchange="gltImportGalleryFile(this)">
 <div class="hint" id="gltGalleryStatus"></div>
@@ -769,13 +778,17 @@ function gltInspect(kind,index){
  id=card.id||'';
  if(!record&&id&&dbById[id]!==undefined)record=dbCards[dbById[id]];
  var d=record||card;
+ if(kind==='db'&&gltExternalCards&&gltExternalCards[id])d=gltExternalCards[id];
  var name=d.name||card.name||'Unknown card';
  var text=d.text||'No full card text is stored for this record yet.';
+ var artUrl=gltResolveCardImage(d);
+ if(artUrl)html+='<img class="glt-info-art" src="'+gltEscape(artUrl)+'" alt="Card artwork" onerror="this.style.display=\'none\'">';
+ else html+='<div class="glt-info-art-fallback">Artwork unavailable for this card</div>';
  html+='<div class="glt-info-grid">'+gltInfoStat('Card ID',id||'Training placeholder')+gltInfoStat('Type',d.type||card.type||'Character')+gltInfoStat('Color',d.color||'Not recorded')+gltInfoStat('Printed cost',d.cost===undefined?'—':d.cost)+gltInfoStat('Printed power',d.power===undefined?'—':d.power)+gltInfoStat('Counter',d.counter===undefined?'—':d.counter)+'</div>';
  html+='<h3>Card ability text</h3><div class="glt-info-effect">'+gltEscape(text)+'</div>';
  html+='<h3>How this card works</h3><div class="glt-info-effect">'+gltEscape(gltExplainCard(id))+'</div>';
  if(live){html+='<h3>Current battlefield status</h3><div class="glt-info-grid">'+gltInfoStat('Current cost',currentCharacterCost(live))+gltInfoStat('Current power',characterPower(live))+gltInfoStat('State',live.rested?'Rested':'Active')+gltInfoStat('Attached DON!!',live.don||0)+'</div>';}
- html+='<p class="glt-info-note">Card text comes from the trainer’s local database and may be incomplete. Beginner explanations are not official rulings. No official card artwork is included.</p>';
+ html+='<p class="glt-info-note">Card text comes from the trainer’s local database and may be incomplete. Beginner explanations are not official rulings. Artwork appears only when a card-data source supplies a valid HTTPS image URL. Images may require internet and may be unavailable.</p>';
  gltOpenInfo(name,html);
 }
 function gltShowRules(){
@@ -1094,21 +1107,92 @@ function gltGallerySetValue(c){
  var m=/^([A-Z]+[0-9]+)-/.exec(c.id||'');
  return c.set|| (m?m[1]:'DEMO');
 }
+var gltEnglishSets=['OP-01','OP-02','OP-03','OP-04','OP-05','OP-06','OP-07','OP-08','OP-09','OP-10','OP-11','OP-12','OP-13','OP-14','OP-15','OP-16','OP-17','EB-01','EB-02','EB-03','ST-01','ST-02','ST-03','ST-04','ST-05','ST-06','ST-07','ST-08','ST-09','ST-10','ST-11','ST-12','ST-13','ST-14','ST-15','ST-16','ST-17','ST-18','ST-19','ST-20','ST-21','ST-22','ST-23','ST-24','ST-25','ST-26'];
+function gltInitSetOptions(){var s=document.getElementById('gltOfficialSet');if(!s||s.options.length>1)return;for(var i=0;i<gltEnglishSets.length;i++){var o=document.createElement('option');o.value=gltEnglishSets[i];o.text=gltEnglishSets[i];s.appendChild(o);}}
+function gltLoadEnglishSet(){
+ var code=document.getElementById('gltOfficialSet').value;
+ if(!code){gltToast('Choose a set first.');return;}
+ var status=document.getElementById('gltGalleryStatus');status.textContent='Loading '+code+' English card data...';
+ var url='https://cdn.jsdelivr.net/gh/michalkiral/optcg-data@main/data/cards/'+encodeURIComponent(code)+'.json';
+ var xhr=new XMLHttpRequest();xhr.open('GET',url,true);xhr.timeout=16000;
+ xhr.onreadystatechange=function(){if(xhr.readyState!==4)return;
+  if(xhr.status!==200){status.textContent='Could not load '+code+' (HTTP '+xhr.status+'). The set may not be available in this dataset.';return;}
+  try{
+   var data=JSON.parse(xhr.responseText),arr;
+   if(Object.prototype.toString.call(data)==='[object Array]')arr=data;
+   else if(data.cards&&Object.prototype.toString.call(data.cards)==='[object Array]')arr=data.cards;
+   else if(data.data&&Object.prototype.toString.call(data.data)==='[object Array]')arr=data.data;
+   else if(data.cards&&typeof data.cards==='object'){arr=[];for(var id in data.cards)if(data.cards.hasOwnProperty(id))arr.push(data.cards[id]);}
+   else if(data&&typeof data==='object'){arr=[];for(var id2 in data)if(data.hasOwnProperty(id2)&&data[id2]&&data[id2].name)arr.push(data[id2]);}
+   else throw Error('Unsupported data structure');
+   var added=0,updated=0,skipped=0;
+   for(var i=0;i<arr.length;i++){
+    var c=arr[i];if(!c||!c.id||!c.name){skipped++;continue;}
+    var id=String(c.id),colors=c.colors||[],clr=Object.prototype.toString.call(colors)==='[object Array]'?colors.join('/'):String(c.color||colors||'');
+    var card={id:id,name:String(c.name),type:String(c.category||c.type||'Character'),color:clr,cost:Number(c.cost)||0,power:Number(c.power)||0,counter:Number(c.counter)||0,text:String(c.effect||c.text||'')+(c.trigger?' Trigger: '+c.trigger:''),set:String(c.set||code),image_url:gltResolveCardImage(c)};
+    // Protect the trainer's built-in card definitions; store external entries in gallery-only collection.
+    if(gltExternalCards[id])updated++;else added++;
+    gltExternalCards[id]=card;
+   }
+   gltGalleryPage=0;gltRenderGallery();status.textContent=code+': '+added+' imported, '+updated+' updated, '+skipped+' skipped (temporary gallery only).';
+  }catch(e){status.textContent='Could not parse '+code+': '+e.message;}
+ };
+ xhr.onerror=function(){status.textContent='Network or CORS error loading '+code+'.';};
+ xhr.ontimeout=function(){status.textContent='Request timed out. Try again later.';};
+ xhr.send(null);
+}
+
+function gltImageUrl(raw){
+ if(!raw)return '';
+ if(typeof raw==='object')raw=raw.url||raw.src||raw.large||raw.full||raw.image_url||raw.image||'';
+ if(typeof raw!=='string')return '';
+ raw=raw.replace(/^\s+|\s+$/g,'');
+ if(/^https:\/\/[^\s"'<>]+$/i.test(raw))return raw;
+ return '';
+}
+function gltResolveCardImage(c){
+ if(!c)return '';
+ var fields=['image_url','image','imageUrl','imageURL','img','artwork','artwork_url','card_image','cardImage','image_link','imageLink','images'];
+ for(var i=0;i<fields.length;i++){
+  var raw=c[fields[i]];
+  if(Object.prototype.toString.call(raw)==='[object Array]')raw=raw[0];
+  var url=gltImageUrl(raw);
+  if(url)return url;
+ }
+ return '';
+}
+function gltArtFallback(c){
+ return '<div class="glt-art-fallback"><strong>'+gltGalleryEsc(c.id||'Card')+'</strong>'+gltGalleryEsc(c.name||'Unknown')+'<div>Artwork unavailable</div></div>';
+}
+function gltArtError(img){
+ var p=img.parentNode;if(!p)return;
+ var label=p.getAttribute('data-card-id')||'Card';
+ p.innerHTML='<div class="glt-art-fallback"><strong>'+gltGalleryEsc(label)+'</strong>Artwork unavailable</div>';
+}
+var gltExternalCards={};
+function gltGalleryAllCards(){var a=[],seen={};for(var i=0;i<dbCards.length;i++){var c=dbCards[i];if(gltExternalCards[c.id])a.push(gltExternalCards[c.id]);else a.push(c);seen[c.id]=true;}
+for(var id in gltExternalCards)if(gltExternalCards.hasOwnProperty(id)&&!seen[id])a.push(gltExternalCards[id]);return a;}
+function gltInspectGalleryIndex(i){var cards=gltGalleryAllCards(),c=cards[i];if(!c)return;
+ // Existing inspector expects a dbCards index. For external records, temporarily append and inspect.
+ var idx=dbById[c.id];if(idx===undefined){idx=dbCards.length;dbCards.push(c);dbById[c.id]=idx;}
+ else if(gltExternalCards[c.id]){dbCards[idx]=c;}
+ gltInspect('db',idx);
+}
 function gltRenderGallery(){
- var grid=document.getElementById('gltGalleryGrid');if(!grid)return;
+ var grid=document.getElementById('gltGalleryGrid');if(!grid)return;var galleryCards=gltGalleryAllCards();gltInitSetOptions();
  var q=document.getElementById('gltGallerySearch').value.toLowerCase();
  var color=document.getElementById('gltGalleryColor').value;
  var type=document.getElementById('gltGalleryType').value;
  var set=document.getElementById('gltGallerySet').value;
  var order=document.getElementById('gltGalleryOrder').value;
  var sets={},i,c,list=[],opt,select=document.getElementById('gltGallerySet');
- for(i=0;i<dbCards.length;i++)sets[gltGallerySetValue(dbCards[i])]=true;
+ for(i=0;i<galleryCards.length;i++)sets[gltGallerySetValue(galleryCards[i])]=true;
  var keys=[];for(var k in sets)if(sets.hasOwnProperty(k))keys.push(k);
  keys.sort();select.innerHTML='<option value="">All sets</option>';
  for(i=0;i<keys.length;i++){opt=document.createElement('option');opt.value=keys[i];opt.appendChild(document.createTextNode(keys[i]));select.appendChild(opt);}
  select.value=set;if(select.value!==set){set='';select.value='';}
- for(i=0;i<dbCards.length;i++){
-  c=dbCards[i];
+ for(i=0;i<galleryCards.length;i++){
+  c=galleryCards[i];
   if(color&&(c.color||'').indexOf(color)<0)continue;
   if(type&&c.type!==type)continue;
   if(set&&gltGallerySetValue(c)!==set)continue;
@@ -1116,7 +1200,7 @@ function gltRenderGallery(){
   list.push(i);
  }
  list.sort(function(a,b){
-  var x=dbCards[a],y=dbCards[b];
+  var x=galleryCards[a],y=galleryCards[b];
   if(order==='cost')return (Number(x.cost)||0)-(Number(y.cost)||0)||String(x.id).localeCompare(String(y.id));
   return String(x[order]||'').localeCompare(String(y[order]||''));
  });
@@ -1125,17 +1209,17 @@ function gltRenderGallery(){
  if(gltGalleryPage<0)gltGalleryPage=0;
  var html='',from=gltGalleryPage*gltGalleryPageSize,to=Math.min(list.length,from+gltGalleryPageSize);
  for(i=from;i<to;i++){
-  var index=list[i];c=dbCards[index];
-  var img=c.image_url||c.image||'';
-  var art=img&&/^https:\/\//i.test(img)?'<img alt="" loading="lazy" src="'+gltGalleryEsc(img)+'">':'Artwork not included';
-  html+='<div class="glt-gallery-card" data-glt-inspect="db" data-glt-index="'+index+'" onclick="gltInspect(\'db\','+index+')">'+
-   '<div class="glt-gallery-art">'+art+'</div><strong>'+gltGalleryEsc(c.name||'Unnamed')+'</strong>'+
+  var index=list[i];c=galleryCards[index];
+  var img=gltResolveCardImage(c);
+  var art=img?'<img alt="Card artwork" loading="lazy" src="'+gltGalleryEsc(img)+'" onerror="gltArtError(this)">':gltArtFallback(c);
+  html+='<div class="glt-gallery-card" data-glt-inspect="db" data-glt-index="'+index+'" onclick="gltInspectGalleryIndex('+index+')">'+
+   '<div class="glt-gallery-art" data-card-id="'+gltGalleryEsc(c.id||'')+'">'+art+'</div><strong>'+gltGalleryEsc(c.name||'Unnamed')+'</strong>'+
    '<div class="hint">'+gltGalleryEsc(c.id||'')+' · '+gltGalleryEsc(c.type||'')+' · '+gltGalleryEsc(c.color||'')+'</div>'+
    '<div class="hint">Cost '+gltGalleryEsc(c.cost===undefined?'—':c.cost)+' · Power '+gltGalleryEsc(c.power===undefined?'—':c.power)+'</div></div>';
  }
  grid.innerHTML=html||'<p>No matching cards.</p>';
  document.getElementById('gltGalleryPaging').innerHTML='Page '+(gltGalleryPage+1)+' / '+pages;
- document.getElementById('gltGalleryStatus').innerHTML=list.length+' matching records · '+dbCards.length+' total loaded. Demo placeholders are not official cards.';
+ document.getElementById('gltGalleryStatus').innerHTML=list.length+' matching records · '+galleryCards.length+' total loaded. Demo placeholders are not official cards.';
 }
 function gltImportGalleryFile(input){
  if(!input.files||!input.files[0])return;
@@ -1166,7 +1250,7 @@ function gltImportGalleryFile(input){
 }
 
 function loadCardDatabase(){try{var data=OFFLINE_CARD_DATA;dbCards=data.cards||[];dbById={};for(var i=0;i<dbCards.length;i++){dbById[dbCards[i].id]=i;var d=dbCards[i];catalog[i]={id:d.id,name:d.name+' ['+d.id+']',cost:d.cost,power:d.power,counter:d.counter,type:d.type};}document.getElementById('dbCount').innerHTML='('+dbCards.length+' records)';filterCards();gltRenderGallery();}catch(e){dbStatus('Offline database error: '+e.message);}}
-function filterCards(){var q=document.getElementById('cardSearch').value.toLowerCase(),color=document.getElementById('colorFilter').value,el=document.getElementById('cardResults'),html='',count=0;for(var i=0;i<dbCards.length;i++){var c=dbCards[i];if(color&&c.color!==color)continue;if(q&&(c.id.toLowerCase().indexOf(q)<0&&c.name.toLowerCase().indexOf(q)<0))continue;html+='<div class="result" data-glt-inspect="db" data-glt-index="'+i+'" onclick="gltInspect(\'db\','+i+')"><strong>'+c.id+' · '+c.name+'</strong> · '+c.color+' · Cost '+c.cost+' · '+c.power+' power · Counter +'+c.counter+'<div class="hint">'+c.text+'</div></div>';count++;}el.innerHTML=html||'<div class="hint">No matching cards.</div>';dbStatus(count+' matching records (Brook stats are photo-based; effects mostly manual).');}
+function filterCards(){var q=document.getElementById('cardSearch').value.toLowerCase(),color=document.getElementById('colorFilter').value,el=document.getElementById('cardResults'),html='',count=0;for(var i=0;i<dbCards.length;i++){var c=dbCards[i];if(color&&c.color!==color)continue;if(q&&(c.id.toLowerCase().indexOf(q)<0&&c.name.toLowerCase().indexOf(q)<0))continue;html+='<div class="result" data-glt-inspect="db" data-glt-index="'+i+'" onclick="gltInspectGalleryIndex('+i+')"><strong>'+c.id+' · '+c.name+'</strong> · '+c.color+' · Cost '+c.cost+' · '+c.power+' power · Counter +'+c.counter+'<div class="hint">'+c.text+'</div></div>';count++;}el.innerHTML=html||'<div class="hint">No matching cards.</div>';dbStatus(count+' matching records (Brook stats are photo-based; effects mostly manual).');}
 function importDemoDeck(){if(!dbCards.length){dbStatus('Card database not loaded.');return;}var raw=document.getElementById('deckImport').value.split(/\r?\n/),ids=[],line,match,id,qty,i,j;for(i=0;i<raw.length;i++){line=raw[i].replace(/^\s+|\s+$/g,'');if(!line)continue;match=/^((?:DEMO-\d{3}|OP\d{2}-\d{3}))(?:\s*[xX*]\s*(\d+))?$/i.exec(line);if(!match){dbStatus('Invalid line '+(i+1)+': use OP17-084 x4');return;}id=match[1].toUpperCase();qty=match[2]?parseInt(match[2],10):1;if(dbById[id]===undefined||qty<1||qty>4){dbStatus('Unknown ID or invalid quantity on line '+(i+1)+'. Max 4 per card.');return;}for(j=0;j<qty;j++)ids.push(dbById[id]);if(ids.length>50){dbStatus('Deck exceeds 50 cards.');return;}}if(!ids.length){dbStatus('Enter at least one demo card.');return;}if(!window.confirm('Start a new training match with '+ids.length+' imported deck cards?'))return;resetBoard();state.deck=shuffleCards(ids);state.hand=[];state.mulliganUsed=false;state.openingHand=true;for(i=0;i<5&&state.deck.length;i++)state.hand.push(state.deck.shift());render();dbStatus('Imported '+ids.length+' cards; shuffled before opening hand. Mulligan available.');log('Deck imported ('+ids.length+' cards), shuffled before drawing opening hand.');}
 function exportDemoDeck(){var counts={},i,id,lines=[];for(i=0;i<state.deck.length;i++){id=dbCards[state.deck[i]]?dbCards[state.deck[i]].id:'';if(id)counts[id]=(counts[id]||0)+1;}for(i=0;i<state.hand.length;i++){id=dbCards[state.hand[i]]?dbCards[state.hand[i]].id:'';if(id)counts[id]=(counts[id]||0)+1;}for(id in counts){if(counts.hasOwnProperty(id))lines.push(id+' x'+counts[id]);}document.getElementById('deckImport').value=lines.join('\n');dbStatus('Exported remaining deck and hand IDs to the text box (not played/trash cards).');}
 function openMatchSetup(){document.getElementById('setupOverlay').style.display='block';}
