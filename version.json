@@ -1,5 +1,5 @@
 {
-  "version": "1.9.1",
+  "version": "2.1.0",
   "download_url": "https://crankerr.github.io/grand-line-trainer/index.html",
-  "notes": "Scrollable full hand on mobile and desktop; no longer limited to showing first five cards. Includes v1.9 Elbaph batch."
+  "notes": "In-game card ability dialogs for Nami, Saul, Usopp, Sanji, Chopper, Robin and Franky; automatic effect notifications."
 }

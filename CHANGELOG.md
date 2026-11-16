@@ -1,6 +1,5 @@
-# v2.0.0
-- Compact battlefield with deck/trash/life/stage/event zones.
-- Tap your deck to draw; tap Trash to inspect.
-- Collapsible tools, combat actions, card actions, sandbox and checklist.
-- Existing mechanics and scrollable hand preserved.
-- Stage placement and Event resolution zone are not yet implemented.
+# v2.1.0
+- In-game modals for primary Character ability choices and card targeting.
+- Nonblocking ability toast notifications.
+- Preserves existing gameplay and compact battlefield.
+- Remaining non-ability utility dialogs and some Event confirmation dialogs are still browser-native.
