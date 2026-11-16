@@ -1,5 +1,5 @@
 {
-  "version": "2.3.1",
+  "version": "2.4.0",
   "download_url": "https://crankerr.github.io/grand-line-trainer/index.html",
-  "notes": "Fix opponent DON!! and Leader layout: override legacy table layout and center opponent Leader."
+  "notes": "English-first searchable gallery with filters, card inspector, pagination, and JSON batch import. Full official catalog not yet included."
 }

@@ -102,12 +102,42 @@ button{padding:5px 7px;font-size:11px}
 .panel.top>.right{display:flex;width:100%;justify-content:flex-end;align-items:center;gap:8px;margin-top:5px;flex-wrap:wrap}
 .panel.top>.right .small{white-space:nowrap}
 @media(max-width:700px){.panel.top>.right{gap:6px}.panel.top>.right button{padding:5px 8px}}
+
+#gltGallery{display:none;margin:9px 0;padding:12px;background:#1b283a;border:1px solid #455873;border-radius:10px}
+#gltGallery.open{display:block}
+.glt-gallery-controls{display:flex;gap:6px;flex-wrap:wrap;margin:9px 0}
+.glt-gallery-controls input{flex:2 1 160px;min-width:120px}
+.glt-gallery-controls select{flex:1 1 105px;min-width:90px}
+#gltGalleryGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(138px,1fr));gap:9px;margin-top:10px}
+.glt-gallery-card{background:#25364b;border:1px solid #4e627b;border-radius:9px;padding:8px;cursor:pointer;min-height:190px}
+.glt-gallery-art{height:105px;background:#162437;border:1px dashed #51647b;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#9cacc1;text-align:center;font-size:11px;overflow:hidden;margin-bottom:7px}
+.glt-gallery-art img{height:100%;max-width:100%;object-fit:contain}
+.glt-gallery-card strong{display:block;font-size:12px;line-height:1.3}
+.glt-gallery-card .hint{font-size:11px;margin-top:5px}
+.glt-gallery-footer{display:flex;gap:8px;align-items:center;justify-content:center;margin:10px 0;flex-wrap:wrap}
+@media(max-width:400px){#gltGalleryGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style></head><body><div class="wrap">
-<h1>☠ GRAND LINE TRAINER <span style="font-size:12px;color:#9daec5">v2.2 Card Inspector & Rules</span></h1><div class="sub">One Piece TCG · Offline mobile battlefield prototype · Hold cards to inspect · No official card artwork</div>
-<div class="glt-toolbar"><button class="gold" onclick="nextPhase()">Next phase ⏭</button><button onclick="toggleGltPanel('gltTools')">☰ Menu / tools</button><button onclick="gltShowRules()">📖 Rules</button><button onclick="saveOfflineMatch()">💾 Save</button></div><div id="gltTools" class="glt-fold panel controls"><button onclick="openMatchSetup()">New match setup</button><button onclick="toggleBrowser()" id="browserBtn">Card database / deck import</button><button onclick="toggleUpdates()">Updates / backups</button></div>
-<div class="browser" id="updatePanel"><strong>Offline updates &amp; save backups</strong><div class="hint">Current version: 2.2.0. Checks require internet and a published HTTPS update manifest. Playing offline still works. Updates require your approval and manual file replacement on older browsers.</div>
+<h1>☠ GRAND LINE TRAINER <span style="font-size:12px;color:#9daec5">v2.4 Card Gallery</span></h1><div class="sub">One Piece TCG · Offline mobile battlefield prototype · Hold cards to inspect · No official card artwork</div>
+<div class="glt-toolbar"><button class="gold" onclick="nextPhase()">Next phase ⏭</button><button onclick="toggleGltPanel('gltTools')">☰ Menu / tools</button><button onclick="gltShowRules()">📖 Rules</button><button onclick="saveOfflineMatch()">💾 Save</button></div><div id="gltTools" class="glt-fold panel controls"><button onclick="openMatchSetup()">New match setup</button><button onclick="toggleBrowser()" id="browserBtn">Card database / deck import</button><button onclick="gltToggleGallery()">🃏 Card gallery</button><button onclick="toggleUpdates()">Updates / backups</button></div>
+<div class="browser" id="updatePanel"><strong>Offline updates &amp; save backups</strong><div class="hint">Current version: 2.4.0. Checks require internet and a published HTTPS update manifest. Playing offline still works. Updates require your approval and manual file replacement on older browsers.</div>
 <div class="hint">Update manifest URL (from the developer):</div><input style="width:100%" id="updateManifestUrl" placeholder="https://your-site.example/updates/manifest.json" aria-label="Update manifest URL"><button onclick="saveUpdateUrl()">Save update source</button><button onclick="checkForUpdates(true)">Check for updates now</button><div class="msg" id="updateStatus">No update source configured.</div><div id="updateOffer" style="display:none"><button class="gold" onclick="openApprovedUpdate()">Get approved update</button><div class="hint">Save your match and export a backup first. Download and replace this HTML manually; the old file cannot overwrite itself.</div></div>
 <div class="hint">Backup your saved match before updating, especially if you move the HTML to another folder or browser. Tap Export, then copy the text into a note or text file. To restore, paste it below and tap Import.</div><button onclick="exportSaveBackup()">Export saved match backup</button><button onclick="importSaveBackup()">Import saved match backup</button><textarea id="backupText" style="width:100%;height:65px" placeholder="Paste exported save backup here"></textarea><div class="hint">No account or cloud sync. The backup includes the saved match and event log; keep it private.</div></div>
+<div id="gltGallery">
+<h2>🃏 One Piece TCG — Card Gallery</h2>
+<div class="hint">English-first gallery. Currently includes the trainer's existing verified/photo-transcribed cards and clearly labeled DEMO placeholders, not the full official catalog. Images are displayed only when a trusted image URL is supplied.</div>
+<div class="glt-gallery-controls">
+<input id="gltGallerySearch" placeholder="Search name, ID or effect" onkeyup="gltGalleryPage=0;gltRenderGallery()">
+<select id="gltGalleryColor" onchange="gltGalleryPage=0;gltRenderGallery()"><option value="">All colors</option><option>Red</option><option>Blue</option><option>Green</option><option>Purple</option><option>Black</option><option>Yellow</option></select>
+<select id="gltGalleryType" onchange="gltGalleryPage=0;gltRenderGallery()"><option value="">All types</option><option>Leader</option><option>Character</option><option>Event</option><option>Stage</option></select>
+<select id="gltGallerySet" onchange="gltGalleryPage=0;gltRenderGallery()"><option value="">All sets</option></select>
+<select id="gltGalleryOrder" onchange="gltGalleryPage=0;gltRenderGallery()"><option value="id">Card number</option><option value="name">Name</option><option value="cost">Cost</option></select>
+</div>
+<div class="hint">Import a local English card-data JSON file (schema described in README). Imported records join the gallery for this session; no external service is contacted.</div>
+<input type="file" id="gltGalleryFile" accept=".json,application/json" onchange="gltImportGalleryFile(this)">
+<div class="hint" id="gltGalleryStatus"></div>
+<div id="gltGalleryGrid"></div>
+<div class="glt-gallery-footer"><button onclick="gltGalleryPage--;gltRenderGallery()">◀ Previous</button><span id="gltGalleryPaging"></span><button onclick="gltGalleryPage++;gltRenderGallery()">Next ▶</button></div>
+</div>
 <div class="browser" id="cardBrowser"><strong>Card browser — English demo + Brook ID records</strong> <span class="small" id="dbCount"></span><div class="hint">Brook Leader OP15-022: Green/Black, 5000 power, 4 Life (verified). Brook deck stats and colors transcribed from your card photos. Elbaph batch effects partly automated; see changelog for manual abilities. Other Events remain manual. Check deck legality below.</div>
 <input id="cardSearch" onkeyup="filterCards()" placeholder="Search name or ID" aria-label="Search cards"> <select id="colorFilter" onchange="filterCards()"><option value="">All colors</option><option>Red</option><option>Blue</option><option>Green</option><option>Purple</option><option>Black</option><option>Yellow</option></select>
 <div class="results" id="cardResults"></div><div class="hint" id="legalityResult"></div>
@@ -1052,7 +1082,90 @@ var brookPreset="OP17-084 x4\nOP17-086 x4\nOP17-095 x4\nOP17-082 x4\nOP17-087 x4
 function loadBrookPreset(){document.getElementById('deckImport').value=brookPreset;dbStatus('Brook preset loaded: 50 cards. Tap Start match with listed deck. Stats are transcribed from your photos; effects mostly manual.');}
 function toggleBrowser(){var e=document.getElementById('cardBrowser');e.className=e.className.indexOf('open')>=0?'browser':'browser open';if(e.className.indexOf('open')>=0)filterCards();}
 function dbStatus(msg){document.getElementById('dbMessage').innerHTML=msg;}
-function loadCardDatabase(){try{var data=OFFLINE_CARD_DATA;dbCards=data.cards||[];dbById={};for(var i=0;i<dbCards.length;i++){dbById[dbCards[i].id]=i;var d=dbCards[i];catalog[i]={id:d.id,name:d.name+' ['+d.id+']',cost:d.cost,power:d.power,counter:d.counter,type:d.type};}document.getElementById('dbCount').innerHTML='('+dbCards.length+' records)';filterCards();}catch(e){dbStatus('Offline database error: '+e.message);}}
+
+var gltGalleryPage=0,gltGalleryPageSize=24;
+function gltGalleryEsc(s){return String(s===undefined||s===null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function gltToggleGallery(){
+ var e=document.getElementById('gltGallery');
+ e.className=e.className==='open'?'':'open';
+ if(e.className==='open')gltRenderGallery();
+}
+function gltGallerySetValue(c){
+ var m=/^([A-Z]+[0-9]+)-/.exec(c.id||'');
+ return c.set|| (m?m[1]:'DEMO');
+}
+function gltRenderGallery(){
+ var grid=document.getElementById('gltGalleryGrid');if(!grid)return;
+ var q=document.getElementById('gltGallerySearch').value.toLowerCase();
+ var color=document.getElementById('gltGalleryColor').value;
+ var type=document.getElementById('gltGalleryType').value;
+ var set=document.getElementById('gltGallerySet').value;
+ var order=document.getElementById('gltGalleryOrder').value;
+ var sets={},i,c,list=[],opt,select=document.getElementById('gltGallerySet');
+ for(i=0;i<dbCards.length;i++)sets[gltGallerySetValue(dbCards[i])]=true;
+ var keys=[];for(var k in sets)if(sets.hasOwnProperty(k))keys.push(k);
+ keys.sort();select.innerHTML='<option value="">All sets</option>';
+ for(i=0;i<keys.length;i++){opt=document.createElement('option');opt.value=keys[i];opt.appendChild(document.createTextNode(keys[i]));select.appendChild(opt);}
+ select.value=set;if(select.value!==set){set='';select.value='';}
+ for(i=0;i<dbCards.length;i++){
+  c=dbCards[i];
+  if(color&&(c.color||'').indexOf(color)<0)continue;
+  if(type&&c.type!==type)continue;
+  if(set&&gltGallerySetValue(c)!==set)continue;
+  if(q&&(String(c.id||'')+' '+String(c.name||'')+' '+String(c.text||'')).toLowerCase().indexOf(q)<0)continue;
+  list.push(i);
+ }
+ list.sort(function(a,b){
+  var x=dbCards[a],y=dbCards[b];
+  if(order==='cost')return (Number(x.cost)||0)-(Number(y.cost)||0)||String(x.id).localeCompare(String(y.id));
+  return String(x[order]||'').localeCompare(String(y[order]||''));
+ });
+ var pages=Math.max(1,Math.ceil(list.length/gltGalleryPageSize));
+ if(gltGalleryPage>=pages)gltGalleryPage=pages-1;
+ if(gltGalleryPage<0)gltGalleryPage=0;
+ var html='',from=gltGalleryPage*gltGalleryPageSize,to=Math.min(list.length,from+gltGalleryPageSize);
+ for(i=from;i<to;i++){
+  var index=list[i];c=dbCards[index];
+  var img=c.image_url||c.image||'';
+  var art=img&&/^https:\/\//i.test(img)?'<img alt="" loading="lazy" src="'+gltGalleryEsc(img)+'">':'Artwork not included';
+  html+='<div class="glt-gallery-card" data-glt-inspect="db" data-glt-index="'+index+'" onclick="gltInspect(\'db\','+index+')">'+
+   '<div class="glt-gallery-art">'+art+'</div><strong>'+gltGalleryEsc(c.name||'Unnamed')+'</strong>'+
+   '<div class="hint">'+gltGalleryEsc(c.id||'')+' · '+gltGalleryEsc(c.type||'')+' · '+gltGalleryEsc(c.color||'')+'</div>'+
+   '<div class="hint">Cost '+gltGalleryEsc(c.cost===undefined?'—':c.cost)+' · Power '+gltGalleryEsc(c.power===undefined?'—':c.power)+'</div></div>';
+ }
+ grid.innerHTML=html||'<p>No matching cards.</p>';
+ document.getElementById('gltGalleryPaging').innerHTML='Page '+(gltGalleryPage+1)+' / '+pages;
+ document.getElementById('gltGalleryStatus').innerHTML=list.length+' matching records · '+dbCards.length+' total loaded. Demo placeholders are not official cards.';
+}
+function gltImportGalleryFile(input){
+ if(!input.files||!input.files[0])return;
+ var f=input.files[0];if(f.size>4000000){alert('JSON file exceeds 4 MB. Import in smaller batches.');return;}
+ var reader=new FileReader();
+ reader.onload=function(){
+  try{
+   var data=JSON.parse(reader.result),cards=data.cards||data;
+   if(Object.prototype.toString.call(cards)!=='[object Array]')throw Error('Expected an array or {cards:[...]}');
+   if(cards.length>10000)throw Error('Import smaller batches (maximum 10,000 records).');
+   var accepted=0,rejected=0;
+   for(var i=0;i<cards.length;i++){
+    var c=cards[i];
+    if(!c||!/^([A-Z]{1,6}\d{1,3}-\d{3}|DEMO-\d{3})$/.test(c.id||'')||!c.name||!c.type){rejected++;continue;}
+    var clean={id:c.id,name:String(c.name).slice(0,120),type:String(c.type).slice(0,30),color:String(c.color||'').slice(0,35),cost:Number(c.cost)||0,power:Number(c.power)||0,counter:Number(c.counter)||0,text:String(c.text||'').slice(0,1500),set:String(c.set||'').slice(0,30),image_url:String(c.image_url||'').slice(0,500)};
+    if(dbById[clean.id]!==undefined){dbCards[dbById[clean.id]]=clean;}
+    else{dbById[clean.id]=dbCards.length;dbCards.push(clean);}
+    accepted++;
+   }
+   for(var j=0;j<dbCards.length;j++){var d=dbCards[j];catalog[j]={id:d.id,name:d.name+' ['+d.id+']',cost:d.cost,power:d.power,counter:d.counter,type:d.type};}
+   document.getElementById('dbCount').innerHTML='('+dbCards.length+' records)';
+   gltGalleryPage=0;gltRenderGallery();filterCards();
+   gltToast('Imported '+accepted+' cards; '+rejected+' skipped. Session only.');
+  }catch(e){alert('Could not import card data: '+e.message);}
+  input.value='';
+ };
+ reader.readAsText(f);
+}
+
+function loadCardDatabase(){try{var data=OFFLINE_CARD_DATA;dbCards=data.cards||[];dbById={};for(var i=0;i<dbCards.length;i++){dbById[dbCards[i].id]=i;var d=dbCards[i];catalog[i]={id:d.id,name:d.name+' ['+d.id+']',cost:d.cost,power:d.power,counter:d.counter,type:d.type};}document.getElementById('dbCount').innerHTML='('+dbCards.length+' records)';filterCards();gltRenderGallery();}catch(e){dbStatus('Offline database error: '+e.message);}}
 function filterCards(){var q=document.getElementById('cardSearch').value.toLowerCase(),color=document.getElementById('colorFilter').value,el=document.getElementById('cardResults'),html='',count=0;for(var i=0;i<dbCards.length;i++){var c=dbCards[i];if(color&&c.color!==color)continue;if(q&&(c.id.toLowerCase().indexOf(q)<0&&c.name.toLowerCase().indexOf(q)<0))continue;html+='<div class="result" data-glt-inspect="db" data-glt-index="'+i+'" onclick="gltInspect(\'db\','+i+')"><strong>'+c.id+' · '+c.name+'</strong> · '+c.color+' · Cost '+c.cost+' · '+c.power+' power · Counter +'+c.counter+'<div class="hint">'+c.text+'</div></div>';count++;}el.innerHTML=html||'<div class="hint">No matching cards.</div>';dbStatus(count+' matching records (Brook stats are photo-based; effects mostly manual).');}
 function importDemoDeck(){if(!dbCards.length){dbStatus('Card database not loaded.');return;}var raw=document.getElementById('deckImport').value.split(/\r?\n/),ids=[],line,match,id,qty,i,j;for(i=0;i<raw.length;i++){line=raw[i].replace(/^\s+|\s+$/g,'');if(!line)continue;match=/^((?:DEMO-\d{3}|OP\d{2}-\d{3}))(?:\s*[xX*]\s*(\d+))?$/i.exec(line);if(!match){dbStatus('Invalid line '+(i+1)+': use OP17-084 x4');return;}id=match[1].toUpperCase();qty=match[2]?parseInt(match[2],10):1;if(dbById[id]===undefined||qty<1||qty>4){dbStatus('Unknown ID or invalid quantity on line '+(i+1)+'. Max 4 per card.');return;}for(j=0;j<qty;j++)ids.push(dbById[id]);if(ids.length>50){dbStatus('Deck exceeds 50 cards.');return;}}if(!ids.length){dbStatus('Enter at least one demo card.');return;}if(!window.confirm('Start a new training match with '+ids.length+' imported deck cards?'))return;resetBoard();state.deck=shuffleCards(ids);state.hand=[];state.mulliganUsed=false;state.openingHand=true;for(i=0;i<5&&state.deck.length;i++)state.hand.push(state.deck.shift());render();dbStatus('Imported '+ids.length+' cards; shuffled before opening hand. Mulligan available.');log('Deck imported ('+ids.length+' cards), shuffled before drawing opening hand.');}
 function exportDemoDeck(){var counts={},i,id,lines=[];for(i=0;i<state.deck.length;i++){id=dbCards[state.deck[i]]?dbCards[state.deck[i]].id:'';if(id)counts[id]=(counts[id]||0)+1;}for(i=0;i<state.hand.length;i++){id=dbCards[state.hand[i]]?dbCards[state.hand[i]].id:'';if(id)counts[id]=(counts[id]||0)+1;}for(id in counts){if(counts.hasOwnProperty(id))lines.push(id+' x'+counts[id]);}document.getElementById('deckImport').value=lines.join('\n');dbStatus('Exported remaining deck and hand IDs to the text box (not played/trash cards).');}
