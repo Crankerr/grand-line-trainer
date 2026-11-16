@@ -1,5 +1,5 @@
 {
-  "version": "2.4.3",
+  "version": "2.4.4",
   "download_url": "https://crankerr.github.io/grand-line-trainer/index.html",
-  "notes": "Bandai artwork URL fallback and image failure diagnostics."
+  "notes": "Image URL diagnostics: inspect, copy, open last failed or selected card image URL."
 }

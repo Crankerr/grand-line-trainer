@@ -144,7 +144,10 @@ button{padding:5px 7px;font-size:11px}
 <div class="hint">Import a local English card-data JSON file (schema described in README). Imported records join the gallery for this session; no external service is contacted.</div>
 <input type="file" id="gltGalleryFile" accept=".json,application/json" onchange="gltImportGalleryFile(this)">
 <div class="hint" id="gltGalleryStatus"></div>
-<div id="gltArtworkDiagnostics" class="hint" aria-live="polite"></div><div id="gltGalleryGrid"></div>
+<div id="gltArtworkDiagnostics" class="hint" aria-live="polite"></div><div class="glt-gallery-controls"><button onclick="gltShowArtworkDebug()">🔍 Inspect image URL</button><button onclick="gltCopyArtworkUrl()">📋 Copy image URL</button><button onclick="gltOpenArtworkUrl()">🌐 Open image URL</button></div>
+<div class="hint">Artwork debug: choose a card in the gallery first, or use the first failed image request. The URL below can be selected and copied on older tablets.</div>
+<input id="gltArtworkDebugUrl" type="text" readonly="readonly" style="width:100%;margin:6px 0" placeholder="Image URL will appear here">
+<div id="gltArtworkDebugStatus" class="hint" aria-live="polite"></div><div id="gltGalleryGrid"></div>
 <div class="glt-gallery-footer"><button onclick="gltGalleryPage--;gltRenderGallery()">◀ Previous</button><span id="gltGalleryPaging"></span><button onclick="gltGalleryPage++;gltRenderGallery()">Next ▶</button></div>
 </div>
 <div class="browser" id="cardBrowser"><strong>Card browser — English demo + Brook ID records</strong> <span class="small" id="dbCount"></span><div class="hint">Brook Leader OP15-022: Green/Black, 5000 power, 4 Life (verified). Brook deck stats and colors transcribed from your card photos. Elbaph batch effects partly automated; see changelog for manual abilities. Other Events remain manual. Check deck legality below.</div>
@@ -781,7 +784,9 @@ function gltInspect(kind,index){
  if(kind==='db'&&gltExternalCards&&gltExternalCards[id])d=gltExternalCards[id];
  var name=d.name||card.name||'Unknown card';
  var text=d.text||'No full card text is stored for this record yet.';
+ gltArtworkPick(d);
  var artUrl=gltResolveCardImage(d);
+ if(artUrl)html+='<p class="glt-info-note">Artwork source: <a href="'+gltEscape(artUrl)+'" target="_blank" rel="noopener">Open image directly</a></p>';
  if(artUrl)html+='<img class="glt-info-art" src="'+gltEscape(artUrl)+'" alt="Card artwork" onerror="this.style.display=\'none\'">';
  else html+='<div class="glt-info-art-fallback">Artwork unavailable for this card</div>';
  html+='<div class="glt-info-grid">'+gltInfoStat('Card ID',id||'Training placeholder')+gltInfoStat('Type',d.type||card.type||'Character')+gltInfoStat('Color',d.color||'Not recorded')+gltInfoStat('Printed cost',d.cost===undefined?'—':d.cost)+gltInfoStat('Printed power',d.power===undefined?'—':d.power)+gltInfoStat('Counter',d.counter===undefined?'—':d.counter)+'</div>';
@@ -1166,6 +1171,30 @@ function gltResolveCardImage(c){
   return 'https://en.onepiece-cardgame.com/images/cardlist/card/'+id+'.png';
  return '';
 }
+var gltArtworkLastFailed=null,gltArtworkSelected=null;
+function gltArtworkPick(card){
+ if(!card)return;
+ gltArtworkSelected={id:card.id||'',name:card.name||'',url:gltResolveCardImage(card),raw:card.image_source||null};
+}
+function gltArtworkCurrent(){return gltArtworkSelected||gltArtworkLastFailed;}
+function gltShowArtworkDebug(){
+ var c=gltArtworkCurrent(),el=document.getElementById('gltArtworkDebugUrl'),status=document.getElementById('gltArtworkDebugStatus');
+ if(!c){status.textContent='Load a set and tap a gallery card, or wait for an image failure.';el.value='';return;}
+ el.value=c.url||'';
+ status.textContent=(c.id||'Unknown ID')+' — '+(c.url?'Image URL available. Copy it or open it to check whether the host serves an image.':'No usable image URL found in the card record.');
+ el.focus();el.select();
+}
+function gltCopyArtworkUrl(){
+ gltShowArtworkDebug();var el=document.getElementById('gltArtworkDebugUrl');
+ if(!el.value)return;
+ var ok=false;
+ try{ok=document.execCommand('copy');}catch(e){}
+ document.getElementById('gltArtworkDebugStatus').textContent=ok?'Image URL copied.':'Select and copy the URL manually (long-press the text field).';
+}
+function gltOpenArtworkUrl(){
+ gltShowArtworkDebug();var url=document.getElementById('gltArtworkDebugUrl').value;
+ if(/^https:\/\/[^\s"'<>]+$/i.test(url))window.open(url,'_blank');
+}
 function gltArtDiagnostic(cardId,reason){
  var el=document.getElementById('gltArtworkDiagnostics');if(!el)return;
  var n=Number(el.getAttribute('data-errors')||0)+1;el.setAttribute('data-errors',n);
@@ -1177,12 +1206,12 @@ function gltArtFallback(c){
 function gltArtError(img){
  var p=img.parentNode;if(!p)return;
  var label=p.getAttribute('data-card-id')||'Card';
- gltArtDiagnostic(label,'request failed');p.innerHTML='<div class="glt-art-fallback"><strong>'+gltGalleryEsc(label)+'</strong>Artwork unavailable</div>';
+ gltArtworkLastFailed={id:label,url:img.getAttribute('src')||''};gltArtDiagnostic(label,'request failed');p.innerHTML='<div class="glt-art-fallback"><strong>'+gltGalleryEsc(label)+'</strong>Artwork unavailable</div>';
 }
 var gltExternalCards={};
 function gltGalleryAllCards(){var a=[],seen={};for(var i=0;i<dbCards.length;i++){var c=dbCards[i];if(gltExternalCards[c.id])a.push(gltExternalCards[c.id]);else a.push(c);seen[c.id]=true;}
 for(var id in gltExternalCards)if(gltExternalCards.hasOwnProperty(id)&&!seen[id])a.push(gltExternalCards[id]);return a;}
-function gltInspectGalleryIndex(i){var cards=gltGalleryAllCards(),c=cards[i];if(!c)return;
+function gltInspectGalleryIndex(i){var cards=gltGalleryAllCards(),c=cards[i];if(!c)return;gltArtworkPick(c);
  // Existing inspector expects a dbCards index. For external records, temporarily append and inspect.
  var idx=dbById[c.id];if(idx===undefined){idx=dbCards.length;dbCards.push(c);dbById[c.id]=idx;}
  else if(gltExternalCards[c.id]){dbCards[idx]=c;}
