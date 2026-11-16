@@ -144,7 +144,7 @@ button{padding:5px 7px;font-size:11px}
 <div class="hint">Import a local English card-data JSON file (schema described in README). Imported records join the gallery for this session; no external service is contacted.</div>
 <input type="file" id="gltGalleryFile" accept=".json,application/json" onchange="gltImportGalleryFile(this)">
 <div class="hint" id="gltGalleryStatus"></div>
-<div id="gltGalleryGrid"></div>
+<div id="gltArtworkDiagnostics" class="hint" aria-live="polite"></div><div id="gltGalleryGrid"></div>
 <div class="glt-gallery-footer"><button onclick="gltGalleryPage--;gltRenderGallery()">◀ Previous</button><span id="gltGalleryPaging"></span><button onclick="gltGalleryPage++;gltRenderGallery()">Next ▶</button></div>
 </div>
 <div class="browser" id="cardBrowser"><strong>Card browser — English demo + Brook ID records</strong> <span class="small" id="dbCount"></span><div class="hint">Brook Leader OP15-022: Green/Black, 5000 power, 4 Life (verified). Brook deck stats and colors transcribed from your card photos. Elbaph batch effects partly automated; see changelog for manual abilities. Other Events remain manual. Check deck legality below.</div>
@@ -1129,7 +1129,7 @@ function gltLoadEnglishSet(){
    for(var i=0;i<arr.length;i++){
     var c=arr[i];if(!c||!c.id||!c.name){skipped++;continue;}
     var id=String(c.id),colors=c.colors||[],clr=Object.prototype.toString.call(colors)==='[object Array]'?colors.join('/'):String(c.color||colors||'');
-    var card={id:id,name:String(c.name),type:String(c.category||c.type||'Character'),color:clr,cost:Number(c.cost)||0,power:Number(c.power)||0,counter:Number(c.counter)||0,text:String(c.effect||c.text||'')+(c.trigger?' Trigger: '+c.trigger:''),set:String(c.set||code),image_url:gltResolveCardImage(c)};
+    var card={id:id,name:String(c.name),type:String(c.category||c.type||'Character'),color:clr,cost:Number(c.cost)||0,power:Number(c.power)||0,counter:Number(c.counter)||0,text:String(c.effect||c.text||'')+(c.trigger?' Trigger: '+c.trigger:''),set:String(c.set||code),image_url:gltResolveCardImage(c),image_source:c.image||c.image_url||null};
     // Protect the trainer's built-in card definitions; store external entries in gallery-only collection.
     if(gltExternalCards[id])updated++;else added++;
     gltExternalCards[id]=card;
@@ -1152,14 +1152,24 @@ function gltImageUrl(raw){
 }
 function gltResolveCardImage(c){
  if(!c)return '';
- var fields=['image_url','image','imageUrl','imageURL','img','artwork','artwork_url','card_image','cardImage','image_link','imageLink','images'];
+ var fields=['image_url','image','imageUrl','imageURL','img','img_url','img_full_url','artwork','artwork_url','card_image','cardImage','image_link','imageLink','images'];
  for(var i=0;i<fields.length;i++){
   var raw=c[fields[i]];
   if(Object.prototype.toString.call(raw)==='[object Array]')raw=raw[0];
   var url=gltImageUrl(raw);
   if(url)return url;
  }
+ // The English Bandai cardlist uses a public, documented ID-based image path.
+ // Only apply this to official-format card IDs, never demo cards.
+ var id=String(c.id||'');
+ if(/^(OP|ST|EB|PRB)[0-9]{2}-[0-9]{3}(_[pr][0-9]+)?$/.test(id))
+  return 'https://en.onepiece-cardgame.com/images/cardlist/card/'+id+'.png';
  return '';
+}
+function gltArtDiagnostic(cardId,reason){
+ var el=document.getElementById('gltArtworkDiagnostics');if(!el)return;
+ var n=Number(el.getAttribute('data-errors')||0)+1;el.setAttribute('data-errors',n);
+ el.textContent='Artwork diagnostic: '+n+' image request(s) failed. Example: '+cardId+' ('+reason+'). The image host may be blocking access or this print may be unavailable.';
 }
 function gltArtFallback(c){
  return '<div class="glt-art-fallback"><strong>'+gltGalleryEsc(c.id||'Card')+'</strong>'+gltGalleryEsc(c.name||'Unknown')+'<div>Artwork unavailable</div></div>';
@@ -1167,7 +1177,7 @@ function gltArtFallback(c){
 function gltArtError(img){
  var p=img.parentNode;if(!p)return;
  var label=p.getAttribute('data-card-id')||'Card';
- p.innerHTML='<div class="glt-art-fallback"><strong>'+gltGalleryEsc(label)+'</strong>Artwork unavailable</div>';
+ gltArtDiagnostic(label,'request failed');p.innerHTML='<div class="glt-art-fallback"><strong>'+gltGalleryEsc(label)+'</strong>Artwork unavailable</div>';
 }
 var gltExternalCards={};
 function gltGalleryAllCards(){var a=[],seen={};for(var i=0;i<dbCards.length;i++){var c=dbCards[i];if(gltExternalCards[c.id])a.push(gltExternalCards[c.id]);else a.push(c);seen[c.id]=true;}
