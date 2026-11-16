@@ -1,8 +1,6 @@
-# v1.9.1 — Scrollable hand
-
-- Show every card in hand (previously only first five rendered).
-- Horizontal swipe on mobile/tablet and horizontal scroll on desktop.
-- Keep selected-card actions and scroll position when re-rendering.
-- No saved-match format changes.
-
-Includes all v1.9 Elbaph batch features.
+# v2.0.0
+- Compact battlefield with deck/trash/life/stage/event zones.
+- Tap your deck to draw; tap Trash to inspect.
+- Collapsible tools, combat actions, card actions, sandbox and checklist.
+- Existing mechanics and scrollable hand preserved.
+- Stage placement and Event resolution zone are not yet implemented.
