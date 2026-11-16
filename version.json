@@ -1,5 +1,5 @@
 {
-  "version": "2.3.0",
+  "version": "2.3.1",
   "download_url": "https://crankerr.github.io/grand-line-trainer/index.html",
-  "notes": "Center Leaders, move DON!! left, move Life adjustment controls to Sandbox / match controls."
+  "notes": "Fix opponent DON!! and Leader layout: override legacy table layout and center opponent Leader."
 }

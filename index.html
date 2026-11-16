@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><title>Grand Line Trainer v2.3 - Card Inspector & Rules</title>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><title>Grand Line Trainer v2.3.1 - Card Inspector & Rules</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#10151e;color:#f3f5f9;font-family:Arial,sans-serif;font-size:15px}.wrap{max-width:1050px;margin:auto;padding:10px}h1{font-size:20px;margin:5px 0;color:#ffcb70}.sub{font-size:12px;color:#9daec5;margin-bottom:8px}.panel{background:#1c2635;border:1px solid #34455c;border-radius:9px;padding:9px;margin-bottom:8px}.top{display:table;width:100%}.top>div{display:table-cell;vertical-align:middle;width:50%}.right{text-align:right}.board{display:table;width:100%;border-spacing:5px}.slot{display:table-cell;width:20%;height:85px;border:2px dashed #53647c;border-radius:6px;text-align:center;vertical-align:middle;background:#26354a;font-size:12px;cursor:pointer}.slot.filled{border-style:solid;border-color:#ffcb70;background:#3c3440}.slot.rested{background:#544a2d}.divider{text-align:center;color:#9daec5;font-size:12px;margin:5px}.controls{text-align:center}.controls button{margin:3px}button{background:#344963;color:white;border:1px solid #69819d;border-radius:5px;padding:8px 11px;font-weight:bold;cursor:pointer}button:active{background:#59718d}.gold{background:#ad6a1f}.counter{display:inline-block;min-width:28px;text-align:center;font-size:19px;font-weight:bold}.stats{display:inline-block;margin:3px 12px 3px 0}.small{font-size:12px;color:#b9c7d7}.log{max-height:70px;overflow:auto;font-size:12px;color:#c7d3e3}.footer{font-size:11px;color:#8fa1b8;text-align:center}
 
@@ -92,6 +92,16 @@ button{padding:5px 7px;font-size:11px}
 .glt-life-controls{width:100%;border:1px solid #64758c;padding:7px;border-radius:6px;margin-bottom:6px;font-size:12px}
 .glt-life-controls div{margin:5px 0}
 @media(max-width:700px){.glt-don-area{font-size:9px}.glt-leader-center{font-size:10px}.glt-leader-center .leader{font-size:10px;padding:4px}.glt-don-area button{padding:4px 7px}}
+
+/* v2.3.1: opponent row must not inherit legacy table-cell layout */
+.panel.top{display:block;width:100%}
+.panel.top>.glt-leader-row{display:flex;width:100%;align-items:center;justify-content:space-between}
+.panel.top>.glt-leader-row>.glt-don-area{flex:0 0 31%;width:31%}
+.panel.top>.glt-leader-row>.glt-leader-center{flex:0 0 38%;width:38%;text-align:center}
+.panel.top>.glt-leader-row>.glt-leader-spacer{flex:0 0 31%;width:31%}
+.panel.top>.right{display:flex;width:100%;justify-content:flex-end;align-items:center;gap:8px;margin-top:5px;flex-wrap:wrap}
+.panel.top>.right .small{white-space:nowrap}
+@media(max-width:700px){.panel.top>.right{gap:6px}.panel.top>.right button{padding:5px 8px}}
 </style></head><body><div class="wrap">
 <h1>☠ GRAND LINE TRAINER <span style="font-size:12px;color:#9daec5">v2.2 Card Inspector & Rules</span></h1><div class="sub">One Piece TCG · Offline mobile battlefield prototype · Hold cards to inspect · No official card artwork</div>
 <div class="glt-toolbar"><button class="gold" onclick="nextPhase()">Next phase ⏭</button><button onclick="toggleGltPanel('gltTools')">☰ Menu / tools</button><button onclick="gltShowRules()">📖 Rules</button><button onclick="saveOfflineMatch()">💾 Save</button></div><div id="gltTools" class="glt-fold panel controls"><button onclick="openMatchSetup()">New match setup</button><button onclick="toggleBrowser()" id="browserBtn">Card database / deck import</button><button onclick="toggleUpdates()">Updates / backups</button></div>
@@ -1126,7 +1136,7 @@ function loadOfflineMatch(){
 
 
 /* ES5 compatible opt-in update checker for legacy Android browsers. */
-var GLT_VERSION='2.3.0';
+var GLT_VERSION='2.3.1';
 var gltAvailableUrl='';
 function toggleUpdates(){var p=document.getElementById('updatePanel');p.className=p.className.indexOf('open')>=0?'browser':'browser open';}
 function updateMessage(m){document.getElementById('updateStatus').innerHTML=escapeUpdateText(m);}
