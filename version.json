@@ -1,4 +1,4 @@
 {
-  "version": "2.5.0",
-  "notes": "Bulk download English card sets, cache in IndexedDB, restore automatically, filter by set. Existing persistent artwork preserved."
+  "version": "2.5.1",
+  "notes": "GitHub artwork manifest, set-folder image paths, automatic ID matching and gallery progress."
 }
