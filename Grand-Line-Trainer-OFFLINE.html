@@ -124,7 +124,7 @@ button{padding:5px 7px;font-size:11px}
 .glt-info-art{max-width:230px;width:100%;max-height:340px;object-fit:contain;border-radius:9px;display:block;margin:0 auto 12px;background:#132136}
 .glt-info-art-fallback{border:1px dashed #65758c;padding:20px;border-radius:8px;text-align:center;color:#9eacc2;margin-bottom:12px}
 </style></head><body><div class="wrap">
-<h1>☠ GRAND LINE TRAINER <span style="font-size:12px;color:#9daec5">v2.4.5 Card Gallery</span></h1><div class="sub">One Piece TCG · Offline mobile battlefield prototype · Hold cards to inspect · Artwork display improvements</div>
+<h1>☠ GRAND LINE TRAINER <span style="font-size:12px;color:#9daec5">v2.4.6 Card Gallery</span></h1><div class="sub">One Piece TCG · Offline mobile battlefield prototype · Hold cards to inspect · Artwork display improvements</div>
 <div class="glt-toolbar"><button class="gold" onclick="nextPhase()">Next phase ⏭</button><button onclick="toggleGltPanel('gltTools')">☰ Menu / tools</button><button onclick="gltShowRules()">📖 Rules</button><button onclick="saveOfflineMatch()">💾 Save</button></div><div id="gltTools" class="glt-fold panel controls"><button onclick="openMatchSetup()">New match setup</button><button onclick="toggleBrowser()" id="browserBtn">Card database / deck import</button><button onclick="gltToggleGallery()">🃏 Card gallery</button><button onclick="toggleUpdates()">Updates / backups</button></div>
 <div class="browser" id="updatePanel"><strong>Offline updates &amp; save backups</strong><div class="hint">Current version: 2.4.0. Checks require internet and a published HTTPS update manifest. Playing offline still works. Updates require your approval and manual file replacement on older browsers.</div>
 <div class="hint">Update manifest URL (from the developer):</div><input style="width:100%" id="updateManifestUrl" placeholder="https://your-site.example/updates/manifest.json" aria-label="Update manifest URL"><button onclick="saveUpdateUrl()">Save update source</button><button onclick="checkForUpdates(true)">Check for updates now</button><div class="msg" id="updateStatus">No update source configured.</div><div id="updateOffer" style="display:none"><button class="gold" onclick="openApprovedUpdate()">Get approved update</button><div class="hint">Save your match and export a backup first. Download and replace this HTML manually; the old file cannot overwrite itself.</div></div>
@@ -139,6 +139,7 @@ button{padding:5px 7px;font-size:11px}
 <select id="gltGallerySet" onchange="gltGalleryPage=0;gltRenderGallery()"><option value="">All sets</option></select>
 <select id="gltGalleryOrder" onchange="gltGalleryPage=0;gltRenderGallery()"><option value="id">Card number</option><option value="name">Name</option><option value="cost">Cost</option></select>
 </div>
+<div class="glt-gallery-controls"><label>Local artwork images <input type="file" accept="image/*" multiple onchange="gltLocalArtChoose(this)"></label><span id="gltLocalArtStatus" class="hint">Optional: select licensed images named OP01-001.png etc. Local files last until refresh.</span></div>
 <div class="glt-gallery-controls"><select id="gltOfficialSet"><option value="">Choose English set...</option></select><button onclick="gltLoadEnglishSet()">Load English set</button></div>
 <div class="hint">Optional online import from a community-maintained dataset based on Bandai’s card list. Requires internet. Card art and text belong to their respective rights holders. Loaded records are temporary and are not guaranteed complete or tournament-current.</div>
 <div class="hint">Import a local English card-data JSON file (schema described in README). Imported records join the gallery for this session; no external service is contacted.</div>
@@ -1155,6 +1156,38 @@ function gltImageUrl(raw){
  if(/^https:\/\/[^\s"'<>]+$/i.test(raw))return raw;
  return '';
 }
+// Local artwork: files under artwork/ on GitHub Pages, or user-selected images for this session.
+// Only use artwork that you have permission to host or distribute.
+var gltLocalArtSession={};
+function gltLocalArtId(raw){
+ var m=String(raw||'').toUpperCase().match(/(?:^|[^A-Z0-9])((?:OP|ST|EB|PRB)[0-9]{2}-[0-9]{3})(?:[^0-9]|$)/);
+ return m?m[1]:'';
+}
+function gltLocalArtFile(c){
+ var id=gltLocalArtId(c&&c.id);
+ if(!id)return '';
+ if(gltLocalArtSession[id])return gltLocalArtSession[id];
+ return 'artwork/'+id+'.png';
+}
+function gltLocalArtChoose(input){
+ var files=input.files||[],count=0;
+ for(var i=0;i<files.length;i++){
+  var f=files[i],id=gltLocalArtId(f.name);
+  if(!id||!/^image\//.test(f.type))continue;
+  if(gltLocalArtSession[id])URL.revokeObjectURL(gltLocalArtSession[id]);
+  gltLocalArtSession[id]=URL.createObjectURL(f);count++;
+ }
+ document.getElementById('gltLocalArtStatus').textContent=count+' artwork image(s) matched by card ID for this session. For permanent images, upload licensed artwork files to the artwork/ folder in GitHub.';
+ gltRenderGallery();
+}
+function gltGalleryImageError(img){
+ var stage=Number(img.getAttribute('data-art-stage')||0),remote=img.getAttribute('data-remote-url')||'';
+ if(stage===0 && remote){
+  img.setAttribute('data-art-stage','1');
+  img.src=remote;return;
+ }
+ gltArtError(img);
+}
 function gltResolveCardImage(c){
  if(!c)return '';
  var fields=['image_url','image','imageUrl','imageURL','img','img_url','img_full_url','artwork','artwork_url','card_image','cardImage','image_link','imageLink','images'];
@@ -1253,7 +1286,8 @@ function gltRenderGallery(){
  for(i=from;i<to;i++){
   var index=list[i];c=galleryCards[index];
   var img=gltResolveCardImage(c);
-  var art=img?'<img alt="Card artwork" referrerpolicy="no-referrer" loading="eager" src="'+gltGalleryEsc(img)+'" onerror="gltArtError(this)">':gltArtFallback(c);
+  var local=gltLocalArtFile(c),first=local||img;
+  var art=first?'<img alt="Card artwork" referrerpolicy="no-referrer" loading="eager" data-art-stage="0" data-remote-url="'+gltGalleryEsc(img||'')+'" src="'+gltGalleryEsc(first)+'" onerror="gltGalleryImageError(this)">':gltArtFallback(c);
   html+='<div class="glt-gallery-card" data-glt-inspect="db" data-glt-index="'+index+'" onclick="gltInspectGalleryIndex('+index+')">'+
    '<div class="glt-gallery-art" data-card-id="'+gltGalleryEsc(c.id||'')+'">'+art+'</div><strong>'+gltGalleryEsc(c.name||'Unnamed')+'</strong>'+
    '<div class="hint">'+gltGalleryEsc(c.id||'')+' · '+gltGalleryEsc(c.type||'')+' · '+gltGalleryEsc(c.color||'')+'</div>'+
