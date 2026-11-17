@@ -124,7 +124,7 @@ button{padding:5px 7px;font-size:11px}
 .glt-info-art{max-width:230px;width:100%;max-height:340px;object-fit:contain;border-radius:9px;display:block;margin:0 auto 12px;background:#132136}
 .glt-info-art-fallback{border:1px dashed #65758c;padding:20px;border-radius:8px;text-align:center;color:#9eacc2;margin-bottom:12px}
 </style></head><body><div class="wrap">
-<h1>☠ GRAND LINE TRAINER <span style="font-size:12px;color:#9daec5">v2.4.9 Card Gallery</span></h1><div class="sub">One Piece TCG · Offline mobile battlefield prototype · Hold cards to inspect · Artwork display improvements</div>
+<h1>☠ GRAND LINE TRAINER <span style="font-size:12px;color:#9daec5">v2.5.0 Card Gallery</span></h1><div class="sub">One Piece TCG · Offline mobile battlefield prototype · Hold cards to inspect · Artwork display improvements</div>
 <div class="glt-toolbar"><button class="gold" onclick="nextPhase()">Next phase ⏭</button><button onclick="toggleGltPanel('gltTools')">☰ Menu / tools</button><button onclick="gltShowRules()">📖 Rules</button><button onclick="saveOfflineMatch()">💾 Save</button></div><div id="gltTools" class="glt-fold panel controls"><button onclick="openMatchSetup()">New match setup</button><button onclick="toggleBrowser()" id="browserBtn">Card database / deck import</button><button onclick="gltToggleGallery()">🃏 Card gallery</button><button onclick="toggleUpdates()">Updates / backups</button></div>
 <div class="browser" id="updatePanel"><strong>Offline updates &amp; save backups</strong><div class="hint">Current version: 2.4.0. Checks require internet and a published HTTPS update manifest. Playing offline still works. Updates require your approval and manual file replacement on older browsers.</div>
 <div class="hint">Update manifest URL (from the developer):</div><input style="width:100%" id="updateManifestUrl" placeholder="https://your-site.example/updates/manifest.json" aria-label="Update manifest URL"><button onclick="saveUpdateUrl()">Save update source</button><button onclick="checkForUpdates(true)">Check for updates now</button><div class="msg" id="updateStatus">No update source configured.</div><div id="updateOffer" style="display:none"><button class="gold" onclick="openApprovedUpdate()">Get approved update</button><div class="hint">Save your match and export a backup first. Download and replace this HTML manually; the old file cannot overwrite itself.</div></div>
@@ -144,7 +144,7 @@ button{padding:5px 7px;font-size:11px}
 <div class="glt-gallery-controls"><label>Bulk artwork images <input id="gltBulkArtInput" type="file" accept="image/*" multiple onchange="gltBulkArtChoose(this)"></label><button type="button" onclick="gltBulkArtApply()">Apply assignments</button><span id="gltBulkArtStatus" class="hint">Select several images; match renamed files to card IDs below.</span></div>
 <div id="gltBulkArtRows" style="max-height:320px;overflow:auto"></div>
 <div class="glt-gallery-controls"><label>Manual card ID <input id="gltManualArtId" placeholder="OP01-001" value="OP01-001" style="max-width:130px"></label><label>Choose image <input id="gltManualArtInput" type="file" accept="image/*" onchange="gltManualArtSelected(this)"></label><button type="button" onclick="gltManualArtAssign()">Assign artwork</button><span id="gltManualArtStatus" class="hint">Use this if Android changes the filename.</span></div>
-<div class="glt-gallery-controls"><select id="gltOfficialSet"><option value="">Choose English set...</option></select><button onclick="gltLoadEnglishSet()">Load English set</button></div>
+<div class="glt-gallery-controls"><select id="gltOfficialSet"><option value="">Choose English set...</option></select><button onclick="gltLoadEnglishSet()">Load English set</button><button onclick="gltLoadAllEnglishSets()">Load all sets</button><button onclick="gltRefreshAllSets()">Refresh all sets</button></div><div id="gltSetSyncStatus" class="hint">Cached sets will load automatically on this browser. First full download requires internet.</div>
 <div class="hint">Optional online import from a community-maintained dataset based on Bandai’s card list. Requires internet. Card art and text belong to their respective rights holders. Loaded records are temporary and are not guaranteed complete or tournament-current.</div>
 <div class="hint">Import a local English card-data JSON file (schema described in README). Imported records join the gallery for this session; no external service is contacted.</div>
 <input type="file" id="gltGalleryFile" accept=".json,application/json" onchange="gltImportGalleryFile(this)">
@@ -1119,6 +1119,121 @@ function gltGallerySetValue(c){
 }
 var gltEnglishSets=['OP-01','OP-02','OP-03','OP-04','OP-05','OP-06','OP-07','OP-08','OP-09','OP-10','OP-11','OP-12','OP-13','OP-14','OP-15','OP-16','OP-17','EB-01','EB-02','EB-03','ST-01','ST-02','ST-03','ST-04','ST-05','ST-06','ST-07','ST-08','ST-09','ST-10','ST-11','ST-12','ST-13','ST-14','ST-15','ST-16','ST-17','ST-18','ST-19','ST-20','ST-21','ST-22','ST-23','ST-24','ST-25','ST-26'];
 function gltInitSetOptions(){var s=document.getElementById('gltOfficialSet');if(!s||s.options.length>1)return;for(var i=0;i<gltEnglishSets.length;i++){var o=document.createElement('option');o.value=gltEnglishSets[i];o.text=gltEnglishSets[i];s.appendChild(o);}}
+
+// Cached English card catalog. Artwork is intentionally NOT fetched or redistributed.
+var gltSetCacheDB=null,gltSetCacheBusy=false,gltSetCacheReady=false,gltSetCacheQueue=[];
+function gltSetDb(cb){
+ if(gltSetCacheReady){cb(gltSetCacheDB);return;}
+ gltSetCacheQueue.push(cb);
+ if(gltSetCacheBusy)return;
+ gltSetCacheBusy=true;
+ if(!window.indexedDB){gltSetCacheDone(null);return;}
+ try{
+  var req=indexedDB.open('glt_english_card_sets',1);
+  req.onupgradeneeded=function(e){var db=e.target.result;if(!db.objectStoreNames.contains('sets'))db.createObjectStore('sets',{keyPath:'code'});};
+  req.onsuccess=function(){gltSetCacheDone(req.result);};
+  req.onerror=function(){gltSetCacheDone(null);};
+ }catch(e){gltSetCacheDone(null);}
+}
+function gltSetCacheDone(db){
+ gltSetCacheDB=db;gltSetCacheReady=true;gltSetCacheBusy=false;
+ var queue=gltSetCacheQueue;gltSetCacheQueue=[];
+ for(var i=0;i<queue.length;i++)queue[i](db);
+}
+function gltSetSync(msg){var e=document.getElementById('gltSetSyncStatus');if(e)e.textContent=msg;}
+function gltParseSetData(data){
+ if(Object.prototype.toString.call(data)==='[object Array]')return data;
+ if(data.cards&&Object.prototype.toString.call(data.cards)==='[object Array]')return data.cards;
+ if(data.data&&Object.prototype.toString.call(data.data)==='[object Array]')return data.data;
+ var obj=data.cards&&typeof data.cards==='object'?data.cards:data,arr=[];
+ for(var id in obj)if(obj.hasOwnProperty(id)&&obj[id]&&obj[id].name)arr.push(obj[id]);
+ return arr;
+}
+function gltMergeSet(code,arr){
+ var added=0;
+ for(var i=0;i<arr.length;i++){
+  var c=arr[i];if(!c||!c.id||!c.name)continue;
+  var id=String(c.id),colors=c.colors||[],clr=Object.prototype.toString.call(colors)==='[object Array]'?colors.join('/'):String(c.color||colors||'');
+  var card={id:id,name:String(c.name),type:String(c.category||c.type||'Character'),color:clr,cost:Number(c.cost)||0,power:Number(c.power)||0,counter:Number(c.counter)||0,text:String(c.effect||c.text||'')+(c.trigger?' Trigger: '+c.trigger:''),set:String(c.set||code),image_url:gltResolveCardImage(c),image_source:c.image||c.image_url||null};
+  if(!gltExternalCards[id])added++;
+  gltExternalCards[id]=card;
+ }
+ return added;
+}
+function gltRestoreCachedSets(next){
+ gltSetDb(function(db){
+  if(!db){gltSetSync('Card cache unavailable; use Load all sets while online.');if(next)next();return;}
+  var tx=db.transaction(['sets'],'readonly'),req=tx.objectStore('sets').getAll();
+  req.onsuccess=function(){
+   var rows=req.result||[],total=0;
+   for(var i=0;i<rows.length;i++)total+=gltMergeSet(rows[i].code,rows[i].cards||[]);
+   gltRenderGallery();
+   gltSetSync(rows.length+' cached set(s) restored, '+total+' unique new cards. Use Load all sets to download missing sets.');
+   if(next)next();
+  };
+  req.onerror=function(){if(next)next();};
+ });
+}
+function gltStoreSet(code,arr){
+ gltSetDb(function(db){
+  if(!db)return;
+  try{var tx=db.transaction(['sets'],'readwrite');tx.objectStore('sets').put({code:code,cards:arr});}catch(e){}
+ });
+}
+function gltLoadAllEnglishSets(force){
+ if(gltSetBatchRunning)return;
+ gltSetBatchRunning=true;
+ var codes=gltEnglishSets.slice(),done=0,ok=0,failed=[],active=0,max=3;
+ // Restore first, then only fetch sets that have no cached copy, unless refreshing.
+ gltSetDb(function(db){
+  function start(known){
+   var pending=[];
+   for(var i=0;i<codes.length;i++)if(force||!known[codes[i]])pending.push(codes[i]);
+   done=codes.length-pending.length;
+   if(!pending.length){gltSetSync('All '+codes.length+' sets already cached. Use Refresh all sets to check for updates.');gltSetBatchRunning=false;return;}
+   function pump(){
+    while(active<max&&pending.length){
+     (function(code){
+      active++;
+      var xhr=new XMLHttpRequest();
+      xhr.open('GET','https://cdn.jsdelivr.net/gh/michalkiral/optcg-data@main/data/cards/'+encodeURIComponent(code)+'.json',true);
+      xhr.timeout=18000;
+      var completed=false;
+      function finish(success,reason){
+       if(completed)return;completed=true;active--;done++;
+       if(success)ok++;else failed.push(code+(reason?' ('+reason+')':''));
+       gltSetSync('Sets checked: '+done+'/'+codes.length+' · downloaded: '+ok+' · unavailable: '+failed.length+'. '+(failed.length?'Some sets may not exist in this dataset.':''));
+       if(done===codes.length){
+        gltSetBatchRunning=false;gltRenderGallery();
+        gltSetSync('Finished: '+ok+' downloaded, '+failed.length+' unavailable. '+(failed.length?'Unavailable: '+failed.join(', '):'All requested sets cached.')+' Reload this page to confirm the cache.');
+       }else pump();
+      }
+      xhr.onreadystatechange=function(){
+       if(xhr.readyState!==4)return;
+       if(xhr.status!==200){finish(false,'HTTP '+xhr.status);return;}
+       try{
+        var arr=gltParseSetData(JSON.parse(xhr.responseText));
+        if(!arr.length)throw Error('Empty set');
+        gltMergeSet(code,arr);gltStoreSet(code,arr);
+        gltRenderGallery();finish(true);
+       }catch(e){finish(false,'parse error');}
+      };
+      xhr.onerror=function(){finish(false,'network');};
+      xhr.ontimeout=function(){finish(false,'timeout');};
+      xhr.send(null);
+     })(pending.shift());
+    }
+   }
+   pump();
+  }
+  if(!db||force){start({});return;}
+  var tx=db.transaction(['sets'],'readonly'),req=tx.objectStore('sets').getAllKeys();
+  req.onsuccess=function(){var known={};for(var i=0;i<req.result.length;i++)known[req.result[i]]=true;start(known);};
+  req.onerror=function(){start({});};
+ });
+}
+var gltSetBatchRunning=false;
+function gltRefreshAllSets(){gltLoadAllEnglishSets(true);}
 function gltLoadEnglishSet(){
  var code=document.getElementById('gltOfficialSet').value;
  if(!code){gltToast('Choose a set first.');return;}
@@ -1566,7 +1681,7 @@ function importSaveBackup(){
 }
 function initUpdateChecker(){try{var u=window.localStorage.getItem('glt_update_manifest_url')||'https://crankerr.github.io/grand-line-trainer/version.json';document.getElementById('updateManifestUrl').value=u;if(u)checkForUpdates(false);}catch(e){}}
 
-loadCardDatabase();
+loadCardDatabase();gltRestoreCachedSets();
 gltArtOpen();
 initUpdateChecker();
 /* Initial screen is setup; keep a valid state underneath for rendering. */

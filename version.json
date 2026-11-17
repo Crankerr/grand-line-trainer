@@ -1,5 +1,4 @@
 {
-  "version": "2.4.9",
-  "download_url": "https://crankerr.github.io/grand-line-trainer/index.html",
-  "notes": "Persistent local artwork via IndexedDB, automatic restore and clear saved artwork."
+  "version": "2.5.0",
+  "notes": "Bulk download English card sets, cache in IndexedDB, restore automatically, filter by set. Existing persistent artwork preserved."
 }
