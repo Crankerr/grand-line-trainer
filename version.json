@@ -1,4 +1,4 @@
 {
-  "version": "2.4.7",
-  "notes": "Manual artwork assignment and filename diagnostics"
+  "version": "2.4.8",
+  "notes": "Bulk artwork assignment for up to 80 images, including Android-renamed files; automatic filename matching and manual mapping."
 }
