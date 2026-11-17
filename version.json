@@ -1,4 +1,5 @@
 {
-  "version": "2.4.8",
-  "notes": "Bulk artwork assignment for up to 80 images, including Android-renamed files; automatic filename matching and manual mapping."
+  "version": "2.4.9",
+  "download_url": "https://crankerr.github.io/grand-line-trainer/index.html",
+  "notes": "Persistent local artwork via IndexedDB, automatic restore and clear saved artwork."
 }

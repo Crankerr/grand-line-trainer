@@ -124,7 +124,7 @@ button{padding:5px 7px;font-size:11px}
 .glt-info-art{max-width:230px;width:100%;max-height:340px;object-fit:contain;border-radius:9px;display:block;margin:0 auto 12px;background:#132136}
 .glt-info-art-fallback{border:1px dashed #65758c;padding:20px;border-radius:8px;text-align:center;color:#9eacc2;margin-bottom:12px}
 </style></head><body><div class="wrap">
-<h1>☠ GRAND LINE TRAINER <span style="font-size:12px;color:#9daec5">v2.4.8 Card Gallery</span></h1><div class="sub">One Piece TCG · Offline mobile battlefield prototype · Hold cards to inspect · Artwork display improvements</div>
+<h1>☠ GRAND LINE TRAINER <span style="font-size:12px;color:#9daec5">v2.4.9 Card Gallery</span></h1><div class="sub">One Piece TCG · Offline mobile battlefield prototype · Hold cards to inspect · Artwork display improvements</div>
 <div class="glt-toolbar"><button class="gold" onclick="nextPhase()">Next phase ⏭</button><button onclick="toggleGltPanel('gltTools')">☰ Menu / tools</button><button onclick="gltShowRules()">📖 Rules</button><button onclick="saveOfflineMatch()">💾 Save</button></div><div id="gltTools" class="glt-fold panel controls"><button onclick="openMatchSetup()">New match setup</button><button onclick="toggleBrowser()" id="browserBtn">Card database / deck import</button><button onclick="gltToggleGallery()">🃏 Card gallery</button><button onclick="toggleUpdates()">Updates / backups</button></div>
 <div class="browser" id="updatePanel"><strong>Offline updates &amp; save backups</strong><div class="hint">Current version: 2.4.0. Checks require internet and a published HTTPS update manifest. Playing offline still works. Updates require your approval and manual file replacement on older browsers.</div>
 <div class="hint">Update manifest URL (from the developer):</div><input style="width:100%" id="updateManifestUrl" placeholder="https://your-site.example/updates/manifest.json" aria-label="Update manifest URL"><button onclick="saveUpdateUrl()">Save update source</button><button onclick="checkForUpdates(true)">Check for updates now</button><div class="msg" id="updateStatus">No update source configured.</div><div id="updateOffer" style="display:none"><button class="gold" onclick="openApprovedUpdate()">Get approved update</button><div class="hint">Save your match and export a backup first. Download and replace this HTML manually; the old file cannot overwrite itself.</div></div>
@@ -140,6 +140,7 @@ button{padding:5px 7px;font-size:11px}
 <select id="gltGalleryOrder" onchange="gltGalleryPage=0;gltRenderGallery()"><option value="id">Card number</option><option value="name">Name</option><option value="cost">Cost</option></select>
 </div>
 <div class="glt-gallery-controls"><label>Local artwork images <input type="file" accept="image/*" multiple onchange="gltLocalArtChoose(this)"></label><span id="gltLocalArtStatus" class="hint">Select local images to match card IDs automatically.</span></div>
+<div class="glt-gallery-controls"><strong>Saved artwork:</strong> <span id="gltArtStorageStatus" class="hint">Checking browser storage...</span> <button type="button" onclick="gltArtClear()">Clear saved artwork</button></div>
 <div class="glt-gallery-controls"><label>Bulk artwork images <input id="gltBulkArtInput" type="file" accept="image/*" multiple onchange="gltBulkArtChoose(this)"></label><button type="button" onclick="gltBulkArtApply()">Apply assignments</button><span id="gltBulkArtStatus" class="hint">Select several images; match renamed files to card IDs below.</span></div>
 <div id="gltBulkArtRows" style="max-height:320px;overflow:auto"></div>
 <div class="glt-gallery-controls"><label>Manual card ID <input id="gltManualArtId" placeholder="OP01-001" value="OP01-001" style="max-width:130px"></label><label>Choose image <input id="gltManualArtInput" type="file" accept="image/*" onchange="gltManualArtSelected(this)"></label><button type="button" onclick="gltManualArtAssign()">Assign artwork</button><span id="gltManualArtStatus" class="hint">Use this if Android changes the filename.</span></div>
@@ -1162,6 +1163,54 @@ function gltImageUrl(raw){
 // Local artwork: files under artwork/ on GitHub Pages, or user-selected images for this session.
 // Only use artwork that you have permission to host or distribute.
 var gltLocalArtSession={};
+// Persist user-selected artwork as Blobs in IndexedDB, not localStorage.
+var gltArtDB=null,gltArtPending=[],gltArtReady=false,gltArtSavedCount=0;
+function gltArtStorageStatus(msg){var el=document.getElementById('gltArtStorageStatus');if(el)el.textContent=msg;}
+function gltArtOpen(){
+ if(!window.indexedDB){gltArtStorageStatus('Persistent storage unavailable in this browser. Artwork remains temporary.');return;}
+ try{
+  var req=indexedDB.open('grand_line_trainer_artwork',1);
+  req.onupgradeneeded=function(){var db=req.result;if(!db.objectStoreNames.contains('images'))db.createObjectStore('images',{keyPath:'id'});};
+  req.onerror=function(){gltArtStorageStatus('Artwork storage unavailable; imports work until refresh.');};
+  req.onsuccess=function(){gltArtDB=req.result;gltArtReady=true;gltArtRestore();
+   for(var i=0;i<gltArtPending.length;i++)gltArtWrite(gltArtPending[i].id,gltArtPending[i].blob);
+   gltArtPending=[];
+  };
+ }catch(e){gltArtStorageStatus('Artwork storage could not start; imports are temporary.');}
+}
+function gltArtWrite(id,blob){
+ if(!gltArtDB){gltArtPending.push({id:id,blob:blob});return;}
+ try{var tx=gltArtDB.transaction(['images'],'readwrite');tx.objectStore('images').put({id:id,blob:blob});
+  tx.oncomplete=function(){gltArtStorageStatus('Artwork saved locally. Refresh to verify it returns.');};
+  tx.onerror=function(){gltArtStorageStatus('Artwork visible, but saving failed (storage may be full).');};
+ }catch(e){gltArtStorageStatus('Artwork visible, but saving failed.');}
+}
+function gltArtSet(id,blob,persist){
+ if(gltLocalArtSession[id])URL.revokeObjectURL(gltLocalArtSession[id]);
+ gltLocalArtSession[id]=URL.createObjectURL(blob);
+ if(persist)gltArtWrite(id,blob);
+}
+function gltArtRestore(){
+ if(!gltArtDB)return;
+ try{var tx=gltArtDB.transaction(['images'],'readonly'),req=tx.objectStore('images').openCursor(),count=0;
+ req.onsuccess=function(){var cur=req.result;if(cur){var v=cur.value;
+   if(v&&gltLocalArtId(v.id)===v.id&&v.blob){gltArtSet(v.id,v.blob,false);count++;}
+   cur.continue();
+  }else{gltArtSavedCount=count;gltArtStorageStatus(count+' saved artwork image(s) restored on this device.');gltRenderGallery();}
+ };
+ req.onerror=function(){gltArtStorageStatus('Could not restore saved artwork.');};
+ }catch(e){gltArtStorageStatus('Could not read saved artwork.');}
+}
+function gltArtClear(){
+ if(!window.confirm('Delete all artwork saved in this browser for Grand Line Trainer? This cannot be undone.'))return;
+ if(!gltArtDB){gltArtStorageStatus('Persistent artwork storage is not available.');return;}
+ try{var tx=gltArtDB.transaction(['images'],'readwrite');tx.objectStore('images').clear();
+ tx.oncomplete=function(){for(var id in gltLocalArtSession)if(gltLocalArtSession.hasOwnProperty(id))URL.revokeObjectURL(gltLocalArtSession[id]);
+ gltLocalArtSession={};gltArtSavedCount=0;gltArtStorageStatus('Saved artwork cleared.');gltRenderGallery();};
+ tx.onerror=function(){gltArtStorageStatus('Could not clear saved artwork.');};
+ }catch(e){gltArtStorageStatus('Could not clear saved artwork.');}
+}
+
 function gltLocalArtId(raw){
  var m=String(raw||'').toUpperCase().match(/(?:^|[^A-Z0-9])((?:OP|ST|EB|PRB)[0-9]{2}-[0-9]{3})(?:[^0-9]|$)/);
  return m?m[1]:'';
@@ -1177,8 +1226,7 @@ function gltLocalArtChoose(input){
  for(var i=0;i<files.length;i++){
   var f=files[i],id=gltLocalArtId(f.name);
   if(!id||!/^image\//.test(f.type))continue;
-  if(gltLocalArtSession[id])URL.revokeObjectURL(gltLocalArtSession[id]);
-  gltLocalArtSession[id]=URL.createObjectURL(f);count++;
+  gltArtSet(id,f,true);count++;
  }
  var names=[];for(var j=0;j<files.length&&j<5;j++)names.push(files[j].name);
  document.getElementById('gltLocalArtStatus').textContent=count+' artwork image(s) matched. Browser filenames: '+(names.join(', ')||'none')+'. If 0 matched, use Manual card ID below.';
@@ -1212,10 +1260,9 @@ function gltBulkArtApply(){
  for(var i=0;i<gltBulkArtFiles.length;i++){
   var sel=document.getElementById('gltBulkMap'+i),id=sel&&sel.value,f=gltBulkArtFiles[i];
   if(!id){skipped++;continue;}
-  if(gltLocalArtSession[id])URL.revokeObjectURL(gltLocalArtSession[id]);
-  gltLocalArtSession[id]=URL.createObjectURL(f);applied++;
+  gltArtSet(id,f,true);applied++;
  }
- document.getElementById('gltBulkArtStatus').textContent=applied+' assigned, '+skipped+' skipped. Images last until page refresh.';
+ document.getElementById('gltBulkArtStatus').textContent=applied+' assigned, '+skipped+' skipped. Images are saved locally when storage is available.';
  gltGalleryPage=0;gltRenderGallery();
 }
 function gltManualArtSelected(input){
@@ -1229,8 +1276,7 @@ function gltManualArtAssign(){
  if(!f){status.textContent='Select an image first.';return;}
  if(!id||raw!==id){status.textContent='Enter a valid card ID such as OP01-001.';return;}
  if(f.type&&f.type.indexOf('image/')!==0){status.textContent='Please select an image file.';return;}
- if(gltLocalArtSession[id])URL.revokeObjectURL(gltLocalArtSession[id]);
- gltLocalArtSession[id]=URL.createObjectURL(f);
+ gltArtSet(id,f,true);
  status.textContent='Assigned '+f.name+' to '+id+'. Search for '+id+' to see the preview.';
  document.getElementById('gltGallerySearch').value=id;
  document.getElementById('gltGallerySet').value='';
@@ -1521,6 +1567,7 @@ function importSaveBackup(){
 function initUpdateChecker(){try{var u=window.localStorage.getItem('glt_update_manifest_url')||'https://crankerr.github.io/grand-line-trainer/version.json';document.getElementById('updateManifestUrl').value=u;if(u)checkForUpdates(false);}catch(e){}}
 
 loadCardDatabase();
+gltArtOpen();
 initUpdateChecker();
 /* Initial screen is setup; keep a valid state underneath for rendering. */
 openMatchSetup();
