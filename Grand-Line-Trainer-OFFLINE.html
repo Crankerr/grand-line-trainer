@@ -124,7 +124,7 @@ button{padding:5px 7px;font-size:11px}
 .glt-info-art{max-width:230px;width:100%;max-height:340px;object-fit:contain;border-radius:9px;display:block;margin:0 auto 12px;background:#132136}
 .glt-info-art-fallback{border:1px dashed #65758c;padding:20px;border-radius:8px;text-align:center;color:#9eacc2;margin-bottom:12px}
 </style></head><body><div class="wrap">
-<h1>☠ GRAND LINE TRAINER <span style="font-size:12px;color:#9daec5">v2.5.1 Card Gallery</span></h1><div class="sub">One Piece TCG · Offline mobile battlefield prototype · Hold cards to inspect · Artwork display improvements</div>
+<h1>☠ GRAND LINE TRAINER <span style="font-size:12px;color:#9daec5">v2.5.2 Card Gallery</span></h1><div class="sub">One Piece TCG · Offline mobile battlefield prototype · Hold cards to inspect · Artwork display improvements</div>
 <div class="glt-toolbar"><button class="gold" onclick="nextPhase()">Next phase ⏭</button><button onclick="toggleGltPanel('gltTools')">☰ Menu / tools</button><button onclick="gltShowRules()">📖 Rules</button><button onclick="saveOfflineMatch()">💾 Save</button></div><div id="gltTools" class="glt-fold panel controls"><button onclick="openMatchSetup()">New match setup</button><button onclick="toggleBrowser()" id="browserBtn">Card database / deck import</button><button onclick="gltToggleGallery()">🃏 Card gallery</button><button onclick="toggleUpdates()">Updates / backups</button></div>
 <div class="browser" id="updatePanel"><strong>Offline updates &amp; save backups</strong><div class="hint">Current version: 2.4.0. Checks require internet and a published HTTPS update manifest. Playing offline still works. Updates require your approval and manual file replacement on older browsers.</div>
 <div class="hint">Update manifest URL (from the developer):</div><input style="width:100%" id="updateManifestUrl" placeholder="https://your-site.example/updates/manifest.json" aria-label="Update manifest URL"><button onclick="saveUpdateUrl()">Save update source</button><button onclick="checkForUpdates(true)">Check for updates now</button><div class="msg" id="updateStatus">No update source configured.</div><div id="updateOffer" style="display:none"><button class="gold" onclick="openApprovedUpdate()">Get approved update</button><div class="hint">Save your match and export a backup first. Download and replace this HTML manually; the old file cannot overwrite itself.</div></div>
@@ -141,7 +141,7 @@ button{padding:5px 7px;font-size:11px}
 </div>
 <div class="glt-gallery-controls"><label>Local artwork images <input type="file" accept="image/*" multiple onchange="gltLocalArtChoose(this)"></label><span id="gltLocalArtStatus" class="hint">Select local images to match card IDs automatically.</span></div>
 <div class="glt-gallery-controls"><strong>Saved artwork:</strong> <span id="gltArtStorageStatus" class="hint">Checking browser storage...</span> <button type="button" onclick="gltArtClear()">Clear saved artwork</button></div>
-<div class="glt-gallery-controls"><label>Bulk artwork images <input id="gltBulkArtInput" type="file" accept="image/*" multiple onchange="gltBulkArtChoose(this)"></label><button type="button" onclick="gltBulkArtApply()">Apply assignments</button><span id="gltBulkArtStatus" class="hint">Select several images; match renamed files to card IDs below.</span></div>
+<div class="glt-gallery-controls"><button type="button" onclick="document.getElementById('gltBulkArtInput').click()">Browse My Files (images)</button><button type="button" onclick="document.getElementById('gltBulkFolderInput').click()">Choose artwork folder</button><input id="gltBulkArtInput" type="file" accept="image/*" multiple style="display:none" onchange="gltBulkArtChoose(this)"><input id="gltBulkFolderInput" type="file" accept="image/*" webkitdirectory directory multiple style="display:none" onchange="gltBulkArtChoose(this)"><button type="button" onclick="gltBulkArtAutoApply()">Auto-assign named images</button><button type="button" onclick="gltBulkArtApply()">Apply assignments</button><span id="gltBulkArtStatus" class="hint">Browse files or select a folder; Android may rename selected images.</span></div>
 <div id="gltBulkArtRows" style="max-height:320px;overflow:auto"></div>
 <div class="glt-gallery-controls"><label>Manual card ID <input id="gltManualArtId" placeholder="OP01-001" value="OP01-001" style="max-width:130px"></label><label>Choose image <input id="gltManualArtInput" type="file" accept="image/*" onchange="gltManualArtSelected(this)"></label><button type="button" onclick="gltManualArtAssign()">Assign artwork</button><span id="gltManualArtStatus" class="hint">Use this if Android changes the filename.</span></div>
 <div class="glt-gallery-controls"><select id="gltOfficialSet"><option value="">Choose English set...</option></select><button onclick="gltLoadEnglishSet()">Load English set</button><button onclick="gltLoadAllEnglishSets()">Load all sets</button><button onclick="gltRefreshAllSets()">Refresh all sets</button></div><div class="glt-gallery-controls"><button type="button" onclick="gltReloadArtManifest()">Refresh GitHub artwork index</button><span id="gltGithubArtStatus" class="hint">Checking GitHub artwork index...</span></div><div id="gltSetSyncStatus" class="hint">Cached sets will load automatically on this browser. First full download requires internet.</div>
@@ -1402,7 +1402,7 @@ function gltLocalArtChoose(input){
 var gltBulkArtFiles=[];
 function gltBulkArtChoose(input){
  gltBulkArtFiles=[];
- var files=input.files||[],max=80;
+ var files=input.files||[],max=500;
  var ids={},all=gltGalleryAllCards();
  for(var i=0;i<all.length;i++){var id=gltLocalArtId(all[i].id);if(id)ids[id]=true;}
  var opts=[];for(var k in ids)if(ids.hasOwnProperty(k))opts.push(k);
@@ -1410,7 +1410,7 @@ function gltBulkArtChoose(input){
  var html='',matched=0;
  for(var j=0;j<files.length&&j<max;j++){
   var f=files[j];if(f.type&&f.type.indexOf('image/')!==0)continue;
-  var guessed=gltLocalArtId(f.name);
+  var guessed=gltLocalArtId(f.webkitRelativePath||f.name)||gltLocalArtId(f.name);
   gltBulkArtFiles.push(f);
   var n=gltBulkArtFiles.length-1;
   html+='<div style="padding:5px 0"><label>'+gltGalleryEsc(f.name)+' → <select id="gltBulkMap'+n+'" style="max-width:190px"><option value="">Skip / choose card</option>';
@@ -1419,7 +1419,17 @@ function gltBulkArtChoose(input){
   if(guessed&&ids[guessed])matched++;
  }
  document.getElementById('gltBulkArtRows').innerHTML=html||'<div class="hint">No usable images selected.</div>';
- document.getElementById('gltBulkArtStatus').textContent=gltBulkArtFiles.length+' image(s) ready; '+matched+' filename match(es). Choose card IDs for images renamed by Android, then Apply assignments. Maximum '+max+' per batch.';
+ document.getElementById('gltBulkArtStatus').textContent=gltBulkArtFiles.length+' image(s) ready; '+matched+' filename match(es). For recognized names use Auto-assign; for Android-renamed images choose card IDs then Apply assignments. Maximum '+max+' per batch.';
+}
+function gltBulkArtAutoApply(){
+ var applied=0,skipped=0;
+ for(var i=0;i<gltBulkArtFiles.length;i++){
+  var sel=document.getElementById('gltBulkMap'+i),id=sel&&sel.value;
+  if(!id){skipped++;continue;}
+  gltArtSet(id,gltBulkArtFiles[i],true);applied++;
+ }
+ document.getElementById('gltBulkArtStatus').textContent=applied+' images assigned and saved locally; '+skipped+' unmatched. Choose card IDs for unmatched files and press Apply assignments.';
+ gltGalleryPage=0;gltRenderGallery();
 }
 function gltBulkArtApply(){
  var applied=0,skipped=0;

@@ -1,4 +1,4 @@
 {
-  "version": "2.5.1",
-  "notes": "GitHub artwork manifest, set-folder image paths, automatic ID matching and gallery progress."
+  "version": "2.5.2",
+  "notes": "Browse My Files, folder selection and up to 500 images per batch with automatic card-ID matching and manual assignment."
 }
