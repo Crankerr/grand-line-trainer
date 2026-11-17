@@ -124,7 +124,7 @@ button{padding:5px 7px;font-size:11px}
 .glt-info-art{max-width:230px;width:100%;max-height:340px;object-fit:contain;border-radius:9px;display:block;margin:0 auto 12px;background:#132136}
 .glt-info-art-fallback{border:1px dashed #65758c;padding:20px;border-radius:8px;text-align:center;color:#9eacc2;margin-bottom:12px}
 </style></head><body><div class="wrap">
-<h1>☠ GRAND LINE TRAINER <span style="font-size:12px;color:#9daec5">v2.4.6 Card Gallery</span></h1><div class="sub">One Piece TCG · Offline mobile battlefield prototype · Hold cards to inspect · Artwork display improvements</div>
+<h1>☠ GRAND LINE TRAINER <span style="font-size:12px;color:#9daec5">v2.4.7 Card Gallery</span></h1><div class="sub">One Piece TCG · Offline mobile battlefield prototype · Hold cards to inspect · Artwork display improvements</div>
 <div class="glt-toolbar"><button class="gold" onclick="nextPhase()">Next phase ⏭</button><button onclick="toggleGltPanel('gltTools')">☰ Menu / tools</button><button onclick="gltShowRules()">📖 Rules</button><button onclick="saveOfflineMatch()">💾 Save</button></div><div id="gltTools" class="glt-fold panel controls"><button onclick="openMatchSetup()">New match setup</button><button onclick="toggleBrowser()" id="browserBtn">Card database / deck import</button><button onclick="gltToggleGallery()">🃏 Card gallery</button><button onclick="toggleUpdates()">Updates / backups</button></div>
 <div class="browser" id="updatePanel"><strong>Offline updates &amp; save backups</strong><div class="hint">Current version: 2.4.0. Checks require internet and a published HTTPS update manifest. Playing offline still works. Updates require your approval and manual file replacement on older browsers.</div>
 <div class="hint">Update manifest URL (from the developer):</div><input style="width:100%" id="updateManifestUrl" placeholder="https://your-site.example/updates/manifest.json" aria-label="Update manifest URL"><button onclick="saveUpdateUrl()">Save update source</button><button onclick="checkForUpdates(true)">Check for updates now</button><div class="msg" id="updateStatus">No update source configured.</div><div id="updateOffer" style="display:none"><button class="gold" onclick="openApprovedUpdate()">Get approved update</button><div class="hint">Save your match and export a backup first. Download and replace this HTML manually; the old file cannot overwrite itself.</div></div>
@@ -139,7 +139,8 @@ button{padding:5px 7px;font-size:11px}
 <select id="gltGallerySet" onchange="gltGalleryPage=0;gltRenderGallery()"><option value="">All sets</option></select>
 <select id="gltGalleryOrder" onchange="gltGalleryPage=0;gltRenderGallery()"><option value="id">Card number</option><option value="name">Name</option><option value="cost">Cost</option></select>
 </div>
-<div class="glt-gallery-controls"><label>Local artwork images <input type="file" accept="image/*" multiple onchange="gltLocalArtChoose(this)"></label><span id="gltLocalArtStatus" class="hint">Optional: select licensed images named OP01-001.png etc. Local files last until refresh.</span></div>
+<div class="glt-gallery-controls"><label>Local artwork images <input type="file" accept="image/*" multiple onchange="gltLocalArtChoose(this)"></label><span id="gltLocalArtStatus" class="hint">Select local images to match card IDs automatically.</span></div>
+<div class="glt-gallery-controls"><label>Manual card ID <input id="gltManualArtId" placeholder="OP01-001" value="OP01-001" style="max-width:130px"></label><label>Choose image <input id="gltManualArtInput" type="file" accept="image/*" onchange="gltManualArtSelected(this)"></label><button type="button" onclick="gltManualArtAssign()">Assign artwork</button><span id="gltManualArtStatus" class="hint">Use this if Android changes the filename.</span></div>
 <div class="glt-gallery-controls"><select id="gltOfficialSet"><option value="">Choose English set...</option></select><button onclick="gltLoadEnglishSet()">Load English set</button></div>
 <div class="hint">Optional online import from a community-maintained dataset based on Bandai’s card list. Requires internet. Card art and text belong to their respective rights holders. Loaded records are temporary and are not guaranteed complete or tournament-current.</div>
 <div class="hint">Import a local English card-data JSON file (schema described in README). Imported records join the gallery for this session; no external service is contacted.</div>
@@ -1177,8 +1178,27 @@ function gltLocalArtChoose(input){
   if(gltLocalArtSession[id])URL.revokeObjectURL(gltLocalArtSession[id]);
   gltLocalArtSession[id]=URL.createObjectURL(f);count++;
  }
- document.getElementById('gltLocalArtStatus').textContent=count+' artwork image(s) matched by card ID for this session. For permanent images, upload licensed artwork files to the artwork/ folder in GitHub.';
+ var names=[];for(var j=0;j<files.length&&j<5;j++)names.push(files[j].name);
+ document.getElementById('gltLocalArtStatus').textContent=count+' artwork image(s) matched. Browser filenames: '+(names.join(', ')||'none')+'. If 0 matched, use Manual card ID below.';
  gltRenderGallery();
+}
+function gltManualArtSelected(input){
+ var f=input.files&&input.files[0];
+ document.getElementById('gltManualArtStatus').textContent=f?'Browser reports: '+f.name+' ('+(f.type||'unknown type')+')':'No file selected';
+}
+function gltManualArtAssign(){
+ var input=document.getElementById('gltManualArtInput'),f=input.files&&input.files[0];
+ var raw=document.getElementById('gltManualArtId').value.toUpperCase().replace(/^\\s+|\\s+$/g,'');
+ var id=gltLocalArtId(raw),status=document.getElementById('gltManualArtStatus');
+ if(!f){status.textContent='Select an image first.';return;}
+ if(!id||raw!==id){status.textContent='Enter a valid card ID such as OP01-001.';return;}
+ if(f.type&&f.type.indexOf('image/')!==0){status.textContent='Please select an image file.';return;}
+ if(gltLocalArtSession[id])URL.revokeObjectURL(gltLocalArtSession[id]);
+ gltLocalArtSession[id]=URL.createObjectURL(f);
+ status.textContent='Assigned '+f.name+' to '+id+'. Search for '+id+' to see the preview.';
+ document.getElementById('gltGallerySearch').value=id;
+ document.getElementById('gltGallerySet').value='';
+ gltGalleryPage=0;gltRenderGallery();
 }
 function gltGalleryImageError(img){
  var stage=Number(img.getAttribute('data-art-stage')||0),remote=img.getAttribute('data-remote-url')||'';
