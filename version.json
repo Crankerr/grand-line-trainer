@@ -1,5 +1,5 @@
 {
-  "version": "2.4.4",
+  "version": "2.4.5",
   "download_url": "https://crankerr.github.io/grand-line-trainer/index.html",
-  "notes": "Image URL diagnostics: inspect, copy, open last failed or selected card image URL."
+  "notes": "Gallery artwork: no-referrer image requests, eager loading, direct-artwork fallback on embedding failure."
 }
